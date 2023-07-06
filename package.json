@@ -12,6 +12,7 @@
   "dependencies": {
     "@datadog/mobile-react-native-webview": "^1.7.1",
     "@eva-design/eva": "^2.2.0",
+    "@react-native-async-storage/async-storage": "^1.19.0",
     "@react-navigation/bottom-tabs": "^6.5.8",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.13",
@@ -24,6 +25,7 @@
     "react-native-dotenv": "^3.4.9",
     "react-native-gesture-handler": "^2.12.0",
     "react-native-global-props": "^1.1.5",
+    "react-native-image-picker": "^5.6.0",
     "react-native-leaflet-ts": "^0.2.18",
     "react-native-reanimated": "^2.17.0",
     "react-native-reanimated-carousel": "^3.4.0",

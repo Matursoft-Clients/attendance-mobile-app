@@ -4,11 +4,152 @@ import { Colors, Image, View, Button as ButtonUiLib } from "react-native-ui-lib"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { ImageBackground, Modal, Pressable, TouchableHighlight } from "react-native"
-import { useState } from "react"
+import { BackHandler, ImageBackground, Modal, Pressable, TouchableHighlight } from "react-native"
+import React, { useEffect, useState } from "react"
+import axios from "axios"
+import { API_URL } from "@env"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useToast } from "react-native-toast-notifications"
+import { useFocusEffect } from "@react-navigation/native"
+import ImagePicker, { launchImageLibrary } from 'react-native-image-picker';
 
 function ProfileScreen({ navigation }) {
-    const [modalVisible, setModalVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false)
+    const [spinnerShow, setSpinnerShow] = useState(false)
+    const [user, setUser] = useState({})
+    const [responseImageGallery, setResponseImageGallery] = useState('');
+    const toast = useToast()
+    const [errorMessage, setErrorMessage] = useState(null)
+
+    const [name, setName] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordConfirmation, setPasswordConfirmation] = useState('')
+
+
+    useEffect(() => {
+        loadUserData()
+    }, [])
+
+    const doLogout = () => {
+        AsyncStorage.removeItem('api_token', () => {
+            navigation.navigate('LoginScreen')
+        })
+    }
+
+    const openGalleryToSelectFile = () => {
+        let options = {
+            storageOptions: {
+                path: 'image'
+            }
+        }
+
+        launchImageLibrary(options, response => {
+            setResponseImageGallery(response.assets[0])
+        })
+    }
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const onBackPress = () => {
+                return true;
+            };
+
+            BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+            return () =>
+                BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+        }, []),
+    );
+
+    const doUpdateUserData = async () => {
+        setErrorMessage(null)
+        const token = await AsyncStorage.getItem('api_token')
+        var formData = new FormData();
+        formData.append('name', name);
+        formData.append('password', password);
+        formData.append('password_confirmation', passwordConfirmation);
+
+        if (responseImageGallery != '') {
+            formData.append('photo', {
+                uri: responseImageGallery.uri,
+                type: responseImageGallery.type,
+                name: responseImageGallery.fileName,
+            })
+        }
+
+        axios.post(`${API_URL}/employee/update`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            toast.show(res.data.msg, {
+                type: 'success',
+                placement: 'center'
+            })
+            setModalVisible(!modalVisible)
+            setPassword('')
+            setPasswordConfirmation('')
+            loadUserData()
+        }).catch((err) => {
+            setSpinnerShow(false);
+            if (err.response.status == 422) {
+                setErrorMessage(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''))
+            } else if (err.response.status == 498) {
+                setErrorMessage(err.response.data.msg)
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                setErrorMessage(err.response.data.msg)
+
+                navigation.navigate('LoginScreen')
+            } else {
+                setErrorMessage(err.response.data.msg)
+            }
+        })
+
+    }
+
+    const loadUserData = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+
+
+        axios.get(`${API_URL}/employee/user`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setUser(res.data.data)
+            setName(res.data.data.name)
+        }).catch((err) => {
+            setSpinnerShow(false);
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     return (
         <View
@@ -32,14 +173,25 @@ function ProfileScreen({ navigation }) {
                         <View
                             style={{ flexDirection: 'row', justifyContent: 'center' }}
                         >
-                            <Image
-                                source={{ uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' }}
-                                width={100}
-                                height={100}
-                                borderRadius={50}
-                            />
+                            {
+                                responseImageGallery ?
+                                    <Image
+                                        source={{ uri: responseImageGallery.uri }}
+                                        width={100}
+                                        height={100}
+                                        borderRadius={50}
+                                    /> :
+                                    <Image
+                                        source={user.photo ? { uri: user.photo } : require('./../../assets/images/no-photo.webp')}
+                                        width={100}
+                                        height={100}
+                                        borderRadius={50}
+                                    />
+                            }
+
                         </View>
                         <TouchableHighlight
+                            onPress={openGalleryToSelectFile}
                             underlayColor="#FAFAFA"
                             style={{ marginTop: 15, marginBottom: 3, backgroundColor: '#414141', alignSelf: 'center', paddingVertical: 9, paddingHorizontal: 17, borderRadius: 6 }}
                         >
@@ -48,16 +200,33 @@ function ProfileScreen({ navigation }) {
                             >Ubah Foto</Text>
                         </TouchableHighlight>
 
+                        {
+                            errorMessage ?
+                                <Text
+                                    style={[GlobalStyle.initialFont, { fontSize: 13, backgroundColor: AppUtil.danger, color: 'white', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 5, marginTop: 15, marginBottom: -5 }]}
+                                >{errorMessage}</Text> : <></>
+                        }
+
+
                         <Input
                             style={{ marginTop: 20 }}
                             label={evaProps => <Text {...evaProps}>Nama Lengkap</Text>}
                             placeholder="Nama Lengkap"
+                            value={name}
+                            onChangeText={(val) => {
+                                setName(val)
+                            }}
                         />
 
                         <Input
                             style={{ marginTop: 15 }}
                             label={evaProps => <Text {...evaProps}>Password Baru</Text>}
                             placeholder="Password Baru"
+                            secureTextEntry={true}
+                            value={password}
+                            onChangeText={(val) => {
+                                setPassword(val)
+                            }}
                         />
                         <Text
                             style={[GlobalStyle.initialFont, { fontSize: 10, marginTop: 4.5 }]}
@@ -67,6 +236,11 @@ function ProfileScreen({ navigation }) {
                             style={{ marginTop: 15 }}
                             label={evaProps => <Text {...evaProps}>Konfirmasi Password Baru</Text>}
                             placeholder="Konfirmasi Password Baru"
+                            value={passwordConfirmation}
+                            secureTextEntry={true}
+                            onChangeText={(val) => {
+                                setPasswordConfirmation(val)
+                            }}
                         />
 
                         <Divider style={{ marginTop: 15, marginBottom: 25 }} />
@@ -75,10 +249,18 @@ function ProfileScreen({ navigation }) {
                             style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}
                         >
                             <Button
-                                onPress={() => setModalVisible(!modalVisible)}
+                                onPress={() => {
+                                    setErrorMessage(null)
+                                    setPassword('')
+                                    setPasswordConfirmation('')
+                                    setModalVisible(!modalVisible)
+                                }}
                                 status="basic"
                             >Tutup</Button>
                             <Button
+                                onPress={() => {
+                                    doUpdateUserData()
+                                }}
                                 style={{ backgroundColor: AppUtil.primary }}
                             >Update</Button>
                         </View>
@@ -99,12 +281,22 @@ function ProfileScreen({ navigation }) {
                     <View
                         style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -85 }}
                     >
-                        <Image
-                            source={{ uri: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png' }}
-                            width={120}
-                            height={120}
-                            borderRadius={60}
-                        />
+                        {
+                            user.photo ?
+                                <Image
+                                    source={{ uri: user.photo }}
+                                    width={120}
+                                    height={120}
+                                    borderRadius={60}
+                                />
+                                :
+                                <Image
+                                    source={require('./../../assets/images/no-photo.webp')}
+                                    width={120}
+                                    height={120}
+                                    borderRadius={60}
+                                />
+                        }
                     </View>
                     <View
                         style={{ marginTop: 10 }}
@@ -112,12 +304,12 @@ function ProfileScreen({ navigation }) {
                         <Text
                             style={[GlobalStyle.initialFont, { textAlign: 'center', fontWeight: '700', fontSize: 17 }]}
                         >
-                            Ahmad Yusuf
+                            {user.name}
                         </Text>
                         <Text
                             style={[GlobalStyle.initialFont, { textAlign: 'center', marginTop: 10, fontSize: 14, color: 'white', backgroundColor: AppUtil.primary, alignSelf: 'center', paddingHorizontal: 13, paddingVertical: 6, borderRadius: 100 }]}
                         >
-                            Kasir
+                            {user.job_position}
                         </Text>
                         <View
                             style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10, gap: 5 }}
@@ -126,7 +318,7 @@ function ProfileScreen({ navigation }) {
                             <Text
                                 style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
                             >
-                                ahmad@gmail.com
+                                {user.email}
                             </Text>
                         </View>
 
@@ -143,7 +335,7 @@ function ProfileScreen({ navigation }) {
                         />
                         <Button
                             onPress={() => {
-                                navigation.navigate('LoginScreen')
+                                doLogout()
                             }}
                             status="danger"
                             style={{ marginTop: 10 }}
