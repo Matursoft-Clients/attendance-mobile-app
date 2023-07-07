@@ -38,7 +38,7 @@ function HomeScreen({ navigation }) {
 
         axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${dateObj.getFullYear()}/${dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() + 1 : `0` + (dateObj.getMonth() + 1)}/${dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()}`)
             .then((res) => {
-                setJadwalSholat(res.data.data.jadwal)
+                // setJadwalSholat(res.data.data.jadwal)
             })
     }
 
