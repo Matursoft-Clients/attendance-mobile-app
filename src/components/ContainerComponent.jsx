@@ -15,7 +15,7 @@ function ContainerComponent({ children }) {
 
     return (
         <View
-            style={{ paddingHorizontal: 25, backgroundColor: '#FFF', paddingVertical: 20 }}
+            style={{ paddingHorizontal: 25, backgroundColor: '#FFF', paddingTop: 20, paddingBottom: 35 }}
         >
             {children}
         </View>

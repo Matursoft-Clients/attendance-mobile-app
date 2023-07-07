@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('tomyntapss@gmail.com')
-    const [password, setPassword] = useState('Maturnuwun123#')
+    const [password, setPassword] = useState('12345678')
     const [spinnerShow, setSpinnerShow] = useState(false)
 
     const toast = useToast()

@@ -11,11 +11,10 @@ import { API_URL } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useToast } from "react-native-toast-notifications"
 import { useFocusEffect } from "@react-navigation/native"
-import ImagePicker, { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 function ProfileScreen({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false)
-    const [spinnerShow, setSpinnerShow] = useState(false)
     const [user, setUser] = useState({})
     const [responseImageGallery, setResponseImageGallery] = useState('');
     const toast = useToast()
@@ -44,7 +43,9 @@ function ProfileScreen({ navigation }) {
         }
 
         launchImageLibrary(options, response => {
-            setResponseImageGallery(response.assets[0])
+            if (!response.didCancel) {
+                setResponseImageGallery(response.assets[0])
+            }
         })
     }
 
@@ -92,7 +93,6 @@ function ProfileScreen({ navigation }) {
             setPasswordConfirmation('')
             loadUserData()
         }).catch((err) => {
-            setSpinnerShow(false);
             if (err.response.status == 422) {
                 setErrorMessage(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''))
             } else if (err.response.status == 498) {
@@ -113,7 +113,6 @@ function ProfileScreen({ navigation }) {
     const loadUserData = async () => {
         const token = await AsyncStorage.getItem('api_token')
 
-
         axios.get(`${API_URL}/employee/user`, {
             headers: {
                 Authorization: 'Bearer ' + token
@@ -122,7 +121,6 @@ function ProfileScreen({ navigation }) {
             setUser(res.data.data)
             setName(res.data.data.name)
         }).catch((err) => {
-            setSpinnerShow(false);
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
                     type: 'danger',
