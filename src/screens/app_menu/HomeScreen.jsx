@@ -1,12 +1,9 @@
-import { Layout, Select, SelectItem, Text } from "@ui-kitten/components"
-import { Colors, Image, View } from "react-native-ui-lib"
+import { Button, Divider, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
 import Carousel from 'react-native-snap-carousel';
-import { Dimensions, SafeAreaView, ScrollView, StyleSheet, TouchableHighlight, TouchableOpacity } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useKeenSliderNative } from 'keen-slider/react-native'
-import SelectDropdown from 'react-native-select-dropdown'
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Alert, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Calendar } from 'react-native-calendars';
 import GlobalStyle from "../../utils/GlobalStyle";
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AppUtil from "../../utils/AppUtil";
@@ -23,6 +20,8 @@ function HomeScreen({ navigation }) {
     const [currWaktuSholat, setCurrWaktuSholat] = useState('')
     const [user, setUser] = useState({})
     const [settings, setSettings] = useState({})
+    const [refresh, setRefersh] = useState(false)
+    const [modalVisible, setModalVisible] = useState(false)
 
     const toast = useToast()
 
@@ -38,7 +37,7 @@ function HomeScreen({ navigation }) {
 
         axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${dateObj.getFullYear()}/${dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() + 1 : `0` + (dateObj.getMonth() + 1)}/${dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()}`)
             .then((res) => {
-                // setJadwalSholat(res.data.data.jadwal)
+                setJadwalSholat(res.data.data.jadwal)
             })
     }
 
@@ -118,31 +117,12 @@ function HomeScreen({ navigation }) {
         })
     }
 
-    const loadTomorrowImsak = () => {
-        const newDateObj = new Date()
-        newDateObj.setDate(newDateObj.getDate() + 1)
-
-        axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
-            .then((res) => {
-                const jadwal = res.data.data.jadwal;
-
-                setCurrSholat('Imsak')
-                setCurrWaktuSholat(jadwal.imsak)
-            })
-    }
-
-    const _renderApiSholat = () => {
+    const _renderApiSholat = useMemo(() => {
         const dateObj = new Date()
+
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}`;
-
-        if (currHoursMinutes <= jadwalSholat.subuh) {
-
-        } else if (currHoursMinutes <= jadwalSholat.subuh) {
-            setCurrSholat('Shubuh')
-            setCurrWaktuSholat(jadwalSholat.subuh)
-        }
 
         for (const key in jadwalSholat) {
             if (Object.hasOwnProperty.call(jadwalSholat, key)) {
@@ -157,7 +137,16 @@ function HomeScreen({ navigation }) {
         }
 
         if (!currSholat && !currWaktuSholat) {
-            loadTomorrowImsak()
+            const newDateObj = new Date()
+            newDateObj.setDate(newDateObj.getDate() + 1)
+
+            axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
+                .then((res) => {
+                    const jadwal = res.data.data.jadwal;
+
+                    setCurrSholat('Imsak')
+                    setCurrWaktuSholat(jadwal.imsak)
+                })
         }
 
         return (
@@ -177,18 +166,20 @@ function HomeScreen({ navigation }) {
 
             </View>
         )
-    }
+    }, [currWaktuSholat])
 
-    const _renderTombolAbsen = () => {
+    const _renderTombolAbsen = useMemo(() => {
         const dateObj = new Date()
+
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
         let status = ''
-        if (currHoursMinutes > settings.presence_entry_start && currHoursMinutes < settings.presence_entry_start) {
-            status = 'Masuk';
-        } else {
+
+        if (currHoursMinutes > settings.presence_entry_end) {
             status = 'Pulang';
+        } else {
+            status = 'Masuk';
         }
 
         return (
@@ -204,28 +195,28 @@ function HomeScreen({ navigation }) {
                 >Absensi {status}</Text>
             </TouchableHighlight>
         )
-    }
+    }, [settings])
 
-    const _renderStatusAbsensi = () => {
+    const _renderStatusAbsensi = useMemo(() => {
         const dateObj = new Date()
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
 
-        if (currHoursMinutes > settings.presence_entry_start && currHoursMinutes < settings.presence_entry_start) {
-            return (
-                <Text
-                    style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
-                >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
-            )
-        } else {
+        if (currHoursMinutes > settings.presence_entry_end) {
             return (
                 <Text
                     style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
                 >Absensi Pulang : {settings.presence_exit ? settings.presence_exit.slice(0, -3) : ''}</Text>
             )
+        } else {
+            return (
+                <Text
+                    style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
+                >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
+            )
         }
-    }
+    }, [settings])
 
     const loadBanners = async () => {
         const token = await AsyncStorage.getItem('api_token')
@@ -280,7 +271,7 @@ function HomeScreen({ navigation }) {
         )
     }
 
-    const _renderCurrTanggal = () => {
+    const _renderCurrTanggal = useMemo(() => {
         const dateObj = new Date()
 
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -295,9 +286,9 @@ function HomeScreen({ navigation }) {
                 style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
             >{date} {monthNames[dateObj.getMonth()]} {year}</Text>
         )
-    }
+    }, [])
 
-    const _renderPerusahaan = () => {
+    const _renderPerusahaan = useMemo(() => {
         return (
             <View
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
@@ -313,37 +304,182 @@ function HomeScreen({ navigation }) {
                 >{settings.office_name}</Text>
             </View>
         )
+    }, [settings])
+
+
+
+    const _renderCalendar = () => {
+        return (
+            <Calendar
+                onDayPress={() => {
+                    setModalVisible(true)
+                }}
+                style={{
+                    marginTop: 15,
+                    borderRadius: 8
+                }}
+                theme={{
+                    calendarBackground: AppUtil.primarySoft,
+                }}
+                markingType={'custom'}
+                markedDates={{
+                    '2023-07-11': {
+                        customStyles: {
+                            container: {
+                                backgroundColor: AppUtil.success,
+                                borderColor: AppUtil.success,
+                                borderWidth: 3
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                                lineHeight: 20
+                            }
+                        }
+                    },
+                    '2023-07-12': {
+                        customStyles: {
+                            container: {
+                                backgroundColor: AppUtil.warning,
+                                borderColor: AppUtil.warning,
+                                borderWidth: 3
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                                lineHeight: 20
+                            }
+                        }
+                    },
+                    '2023-07-13': {
+                        customStyles: {
+                            container: {
+                                backgroundColor: AppUtil.success,
+                                borderColor: AppUtil.warning,
+                                borderWidth: 4
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                                lineHeight: 18
+                            }
+                        }
+                    },
+                    '2023-07-14': {
+                        customStyles: {
+                            container: {
+                                backgroundColor: AppUtil.danger,
+                                borderColor: AppUtil.danger,
+                                borderWidth: 4
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                                lineHeight: 18
+                            }
+                        }
+                    }
+                }}
+            />
+        )
     }
 
     return (
         <SafeAreaView>
-            <ScrollView>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            loadBanners()
+                            loadApiSholat()
+                            loadUserData()
+                            loadSettings()
+                            setRefersh(false)
+                        }}
+                    />
+                }
+            >
                 <ContainerComponent>
+
+                    <Modal
+                        transparent={true}
+                        animationType="slide"
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            Alert.alert('Modal has been closed.');
+                            setModalVisible(!modalVisible);
+                        }}>
+                        <View
+                            style={{ justifyContent: 'center', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+                        >
+                            <View
+                                style={{ paddingVertical: 18, backgroundColor: 'white', borderWidth: 2, borderColor: AppUtil.primary, marginTop: '10%', marginLeft: 20, marginRight: 20, borderRadius: 10, paddingHorizontal: 20 }}
+                            >
+                                <View>
+                                    <Text
+                                        style={[GlobalStyle.initialFont, { fontWeight: '700', fontSize: 22, textAlign: 'center' }]}
+                                    >3 May 2023</Text>
+                                    <View
+                                        style={{ marginTop: 13, alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={[GlobalStyle.initialFont, { fontSize: 16 }]}
+                                        >Masuk : 08:00</Text>
+                                        <Text
+                                            style={[GlobalStyle.initialFont, { fontSize: 16, marginTop: 6 }]}
+                                        >Pulang : 09:00</Text>
+                                    </View>
+                                </View>
+                                <Divider style={{ marginVertical: 15 }} />
+                                <View
+                                    style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}
+                                >
+                                    <Button
+                                        size="small"
+                                        onPress={() => {
+                                            setModalVisible(!modalVisible)
+                                        }}
+                                        status="basic"
+                                    >Tutup</Button>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+
                     <View
                         style={{ height: '100%', paddingBottom: 10 }}
                     >
 
-                        {_renderPerusahaan()}
+                        {_renderPerusahaan}
 
                         <Text
-                            style={[{ textAlign: 'center', marginTop: 5, color: Colors.grey20, fontSize: 14 }, GlobalStyle.initialFont]}
+                            style={[{ textAlign: 'center', marginTop: 5, color: AppUtil.gray, fontSize: 14 }, GlobalStyle.initialFont]}
                         >Assalamu'alaikum,</Text>
                         <Text
                             style={[GlobalStyle.initialFont, { textAlign: 'center', marginTop: 1, fontWeight: '700', fontSize: 16, color: AppUtil.primary }]}
                         >{user.name}</Text>
 
-                        {_renderApiSholat()}
+                        {_renderApiSholat}
                         <View>
                             <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', marginTop: 13 }}>
-                                <Carousel
-                                    inactiveSlideScale={0.9}
-                                    layout={"default"}
-                                    data={banners}
-                                    sliderWidth={width - 50}
-                                    itemWidth={width - 120}
-                                    loop={true}
-                                    autoplay={true}
-                                    renderItem={_renderBanners} />
+                                {
+                                    useMemo(() => {
+                                        return (
+                                            <Carousel
+                                                inactiveSlideScale={0.9}
+                                                layout={"default"}
+                                                data={banners}
+                                                sliderWidth={width - 50}
+                                                itemWidth={width - 120}
+                                                loop={true}
+                                                autoplay={true}
+                                                renderItem={_renderBanners} />
+                                        )
+                                    }, [banners])
+                                }
                             </View>
                         </View>
 
@@ -353,31 +489,19 @@ function HomeScreen({ navigation }) {
                             <View
                                 style={{ flexDirection: 'row', justifyContent: 'space-between' }}
                             >
-                                {_renderStatusAbsensi()}
-                                {_renderCurrTanggal()}
+                                {_renderStatusAbsensi}
+                                {_renderCurrTanggal}
                             </View>
-                            {_renderTombolAbsen()}
+                            {_renderTombolAbsen}
                         </View>
 
                         <Text
                             style={[GlobalStyle.initialFont, { marginTop: 15, fontSize: 15, fontWeight: '700' }]}
                         >Rekapitulasi Absensi</Text>
 
-                        <Calendar
-                            style={{
-                                marginTop: 15,
-                                borderRadius: 8
-                            }}
-                            theme={{
-                                calendarBackground: AppUtil.primarySoft,
-                            }}
-                            onDayPress={day => {
-                                setSelected(day.dateString);
-                            }}
-                            markedDates={{
-                                [selected]: { selected: true, disableTouchEvent: true, selectedDotColor: 'orange' }
-                            }}
-                        />
+                        {
+                            _renderCalendar()
+                        }
                     </View>
                 </ContainerComponent>
             </ScrollView>

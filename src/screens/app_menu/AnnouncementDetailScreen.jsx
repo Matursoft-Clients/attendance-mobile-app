@@ -1,7 +1,6 @@
 import { Button, Card, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
-import { View } from "react-native-ui-lib"
-import { SafeAreaView, ScrollView } from "react-native"
+import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import AppUtil from "../../utils/AppUtil"
 import GlobalStyle from "../../utils/GlobalStyle"
@@ -13,6 +12,7 @@ import { API_URL } from "@env"
 
 function AnnouncementDetailScreen({ route }) {
     const [announcement, setAnnouncement] = useState('')
+    const [refresh, setRefersh] = useState(false)
 
     useEffect(() => {
         loadAnnouncementDetail(route.params.slug)
@@ -29,13 +29,6 @@ function AnnouncementDetailScreen({ route }) {
             }
         }).then(async (res) => {
             setAnnouncement(res.data.data)
-
-            try {
-                await AsyncStorage.setItem(res.data.data.slug, true)
-            } catch (error) {
-
-            }
-
         }).catch((err) => {
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
@@ -69,7 +62,19 @@ function AnnouncementDetailScreen({ route }) {
         <SafeAreaView
             style={{ height: '100%', backgroundColor: 'white' }}
         >
-            <ScrollView>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            loadAnnouncementDetail(route.params.slug)
+                            setRefersh(false)
+                        }}
+                    />
+                }
+            >
                 <ContainerComponent>
 
                     <View

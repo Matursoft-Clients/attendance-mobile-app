@@ -1,12 +1,10 @@
 import { Avatar, Button, Input, Text } from "@ui-kitten/components";
 import { ImageComponent, View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
-import { Colors, Image } from "react-native-ui-lib";
 import GlobalStyle from "../../utils/GlobalStyle";
 import AppUtil from "../../utils/AppUtil";
 import { useEffect, useRef, useState } from "react";
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
-import Toast from "react-native-root-toast";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
 import { API_URL } from "@env"

@@ -25,7 +25,6 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppUtil from './src/utils/AppUtil';
-import { Colors } from 'react-native-ui-lib';
 import { ToastProvider } from 'react-native-toast-notifications';
 
 const Tab = createBottomTabNavigator();
@@ -46,36 +45,36 @@ function AppMenu() {
             <Tab.Screen name="HomeScreen" component={HomeScreen} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
-                    <Icon name="home" size={20} color={focused ? AppUtil.primary : Colors.grey40} />
+                    <Icon name="home" size={20} color={focused ? AppUtil.primary : AppUtil.gray} />
                 ),
-                tabBarInactiveTintColor: Colors.grey40,
+                tabBarInactiveTintColor: AppUtil.gray,
                 tabBarLabel: 'Beranda',
                 tabBarStyle: { height: 60, paddingTop: 10, paddingBottom: 10 },
             }} />
             <Tab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
-                    <MaterialCommunityIcon name="gesture-tap-button" size={20} color={focused ? AppUtil.primary : Colors.grey40} />
+                    <MaterialCommunityIcon name="gesture-tap-button" size={20} color={focused ? AppUtil.primary : AppUtil.gray} />
                 ),
-                tabBarInactiveTintColor: Colors.grey40,
+                tabBarInactiveTintColor: AppUtil.gray,
                 tabBarLabel: 'Absensi',
                 tabBarStyle: { height: 60, paddingTop: 10, paddingBottom: 10 },
             }} />
             <Tab.Screen name="AnnouncementScreenWrapper" component={AnnouncementScreenWrapper} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
-                    <FontAwesome5 name="bullhorn" size={18} color={focused ? AppUtil.primary : Colors.grey40} />
+                    <FontAwesome5 name="bullhorn" size={18} color={focused ? AppUtil.primary : AppUtil.gray} />
                 ),
-                tabBarInactiveTintColor: Colors.grey40,
+                tabBarInactiveTintColor: AppUtil.gray,
                 tabBarLabel: 'Pengumuman',
                 tabBarStyle: { height: 60, paddingTop: 10, paddingBottom: 10 },
             }} />
             <Tab.Screen name="ProfileScreen" component={ProfileScreen} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
-                    <MaterialCommunityIcon name="account" size={18} color={focused ? AppUtil.primary : Colors.grey40} />
+                    <MaterialCommunityIcon name="account" size={18} color={focused ? AppUtil.primary : AppUtil.gray} />
                 ),
-                tabBarInactiveTintColor: Colors.grey40,
+                tabBarInactiveTintColor: AppUtil.gray,
                 tabBarLabel: 'Profil',
                 tabBarStyle: { height: 60, paddingTop: 10, paddingBottom: 10 },
             }} />

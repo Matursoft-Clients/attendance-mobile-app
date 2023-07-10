@@ -1,10 +1,8 @@
 import { Button, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent";
-import { Colors, Image, View } from "react-native-ui-lib";
-import WebView from "react-native-webview";
 import AppUtil from "../../utils/AppUtil";
 import GlobalStyle from "../../utils/GlobalStyle";
-import { PermissionsAndroid, SafeAreaView, ScrollView } from "react-native";
+import { PermissionsAndroid, SafeAreaView, ScrollView, View } from "react-native";
 import Ionicon from 'react-native-vector-icons/Ionicons'
 import Leaflet, { Markers, TileOptions } from 'react-native-leaflet-ts';
 import { useEffect, useState } from "react";
@@ -246,10 +244,16 @@ function AttendanceScreen() {
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
 
-        if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
+        if (dailyAttendance.status == false && currHoursMinutes < settings.presence_entry_start) {
+
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_exit) {
+
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
             text = 'Absensi'
-        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status) {
+        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= presence_exit) {
             text = 'Absensi Pulang'
+        } else if (dailyAttendance.status == true && dailyAttendance.presence_exit_status) {
+
         }
 
         return (
@@ -273,6 +277,7 @@ function AttendanceScreen() {
 
     const _renderStatusLabel = () => {
         const dateObj = new Date()
+
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
@@ -280,24 +285,19 @@ function AttendanceScreen() {
         let displayText;
         let bgColor;
 
-        if (dailyAttendance.status == false && currHoursMinutes > settings.presence_exit) {
+        if (dailyAttendance.status == false && currHoursMinutes < settings.presence_entry_start) {
+            bgColor = AppUtil.warning
+            displayText = 'Absensi Belum dibuka'
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_exit) {
             bgColor = AppUtil.danger
-            displayText = 'Anda Tidak Melakukan Absensi Hari Ini'
-        } else if (dailyAttendance.status == false) {
-            bgColor = AppUtil.danger
-            displayText = 'Anda Belum Melakukan Absensi'
-        } else if (dailyAttendance.status == true && dailyAttendance.presence_entry_status && !dailyAttendance.presence_exit_status) {
-            if (currHoursMinutes > settings.presence_exit) {
-                bgColor = AppUtil.danger
-                displayText = 'Anda Belum Melakukan Absensi Pulang'
-            } else if (dailyAttendance.presence_entry_status == 'late') {
-                bgColor = AppUtil.warning
-                displayText = 'Hari ini, anda terlambat Melakukan Absensi'
-            } else if (dailyAttendance.presence_entry_status == 'on_time') {
-                bgColor = AppUtil.success
-                displayText = 'Anda Sudah Melakukan Absensi Tepat Waktu'
-            }
-        } else {
+            displayText = 'Absensi sudah ditutup'
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
+            bgColor = AppUtil.warning
+            displayText = 'Anda Belum Melakukan Absensi Masuk'
+        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= presence_exit) {
+            bgColor = AppUtil.warning
+            displayText = 'Anda Belum Melakukan Absensi Pulang'
+        } else if (dailyAttendance.status == true && dailyAttendance.presence_exit_status) {
             bgColor = AppUtil.success
             displayText = 'Anda Sudah Melakukan Absensi Pulang'
         }

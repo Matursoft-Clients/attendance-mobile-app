@@ -1,6 +1,5 @@
 import { Button, Card, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
-import { View } from "react-native-ui-lib"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -9,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications"
-import { SafeAreaView, ScrollView } from "react-native"
+import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
 
 function AnnouncementScreen({ navigation }) {
@@ -19,6 +18,7 @@ function AnnouncementScreen({ navigation }) {
     const [announcements, setAnnouncements] = useState([])
     const [ref, setRef] = useState(null)
     const [spinnerShow, setSpinnerShow] = useState(false)
+    const [refresh, setRefersh] = useState(false)
 
     const toast = useToast()
 
@@ -106,6 +106,18 @@ function AnnouncementScreen({ navigation }) {
             style={{ backgroundColor: 'white', height: '100%' }}
         >
             <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            loadAnnouncements()
+                            setRefersh(false)
+                        }}
+                    />
+                }
+
                 ref={(ref) => {
                     setRef(ref)
                 }}

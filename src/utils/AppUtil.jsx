@@ -3,5 +3,6 @@ export default {
     warning: '#fbbf24',
     danger: '#f87171',
     primarySoft: '#f0f9ff',
-    success: '#22c55e'
+    success: '#22c55e',
+    gray: '#9ca3af'
 }
