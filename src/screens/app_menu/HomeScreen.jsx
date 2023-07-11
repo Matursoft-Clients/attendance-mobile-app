@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications";
+import DateUtil from "../../utils/DateUtil";
 
 function HomeScreen({ navigation }) {
 
@@ -22,15 +23,100 @@ function HomeScreen({ navigation }) {
     const [settings, setSettings] = useState({})
     const [refresh, setRefersh] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
+    const [calendars, setCalendars] = useState({})
+    const [calendarsRes, setCalendarsRes] = useState([])
+    const [dataModalAbsen, setDataModalAbsen] = useState({})
 
     const toast = useToast()
 
     useEffect(() => {
+        loadCalendars()
         loadBanners()
         loadApiSholat()
         loadUserData()
         loadSettings()
     }, [])
+
+    const loadCalendars = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+        axios.get(`${API_URL}/calendar?date=${DateUtil.getCurrentYear()}-${DateUtil.getCurrentMonth()}`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            setCalendarsRes(res.data.date)
+            const dataCalendarObj = {};
+            res.data.date.forEach((dateRes, index) => {
+                if (dateRes.absen) {
+                    let bgColor = '#FFFFFF'
+                    let borderColor = '#FFFFFF'
+
+                    if (dateRes.absen.presence_entry_status == 'on_time' && !dateRes.absen.presence_exit_status) {
+                        bgColor = AppUtil.success
+                        borderColor = AppUtil.successSoft
+                    } else if (dateRes.absen.presence_entry_status == 'on_time' && dateRes.absen.presence_exit_status == 'early') {
+                        bgColor = AppUtil.success
+                        borderColor = AppUtil.warning
+                    } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status == 'early') {
+                        bgColor = AppUtil.warning
+                        borderColor = AppUtil.warning
+                    } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status) {
+                        bgColor = AppUtil.warning
+                        borderColor = AppUtil.success
+                    } else if (dateRes.absen.presence_entry_status == 'late' && !dateRes.absen.presence_exit_status) {
+                        bgColor = AppUtil.warning
+                        borderColor = AppUtil.successSoft
+                    } else if (dateRes.absen.presence_entry_status == 'not_present') {
+                        bgColor = AppUtil.danger
+                        borderColor = AppUtil.danger
+                    }
+
+                    dataCalendarObj[`${DateUtil.getCurrentYear()}-${DateUtil.getCurrentMonth()}-${dateRes.day}`] = {
+                        customStyles: {
+                            container: {
+                                backgroundColor: bgColor,
+                                borderColor: borderColor,
+                                borderWidth: 5
+                            },
+                            text: {
+                                color: 'white',
+                                fontWeight: 'bold',
+                                lineHeight: 17
+                            }
+                        }
+                    }
+                }
+            });
+            setCalendars(dataCalendarObj)
+        }).catch((err) => {
+            console.log(err.response)
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     const loadApiSholat = () => {
         const dateObj = new Date()
@@ -115,6 +201,17 @@ function HomeScreen({ navigation }) {
                 })
             }
         })
+    }
+
+    const loadModalShowAbsen = (dayParram) => {
+        const dayObj = calendarsRes.find((e) => {
+            return e.day == dayParram && e.absen
+        })
+
+        if (dayObj) {
+            setDataModalAbsen(dayObj)
+            setModalVisible(true)
+        }
     }
 
     const _renderApiSholat = useMemo(() => {
@@ -311,8 +408,8 @@ function HomeScreen({ navigation }) {
     const _renderCalendar = () => {
         return (
             <Calendar
-                onDayPress={() => {
-                    setModalVisible(true)
+                onDayPress={(datObj) => {
+                    loadModalShowAbsen(datObj.day)
                 }}
                 style={{
                     marginTop: 15,
@@ -322,64 +419,7 @@ function HomeScreen({ navigation }) {
                     calendarBackground: AppUtil.primarySoft,
                 }}
                 markingType={'custom'}
-                markedDates={{
-                    '2023-07-11': {
-                        customStyles: {
-                            container: {
-                                backgroundColor: AppUtil.success,
-                                borderColor: AppUtil.success,
-                                borderWidth: 3
-                            },
-                            text: {
-                                color: 'white',
-                                fontWeight: 'bold',
-                                lineHeight: 20
-                            }
-                        }
-                    },
-                    '2023-07-12': {
-                        customStyles: {
-                            container: {
-                                backgroundColor: AppUtil.warning,
-                                borderColor: AppUtil.warning,
-                                borderWidth: 3
-                            },
-                            text: {
-                                color: 'white',
-                                fontWeight: 'bold',
-                                lineHeight: 20
-                            }
-                        }
-                    },
-                    '2023-07-13': {
-                        customStyles: {
-                            container: {
-                                backgroundColor: AppUtil.success,
-                                borderColor: AppUtil.warning,
-                                borderWidth: 4
-                            },
-                            text: {
-                                color: 'white',
-                                fontWeight: 'bold',
-                                lineHeight: 18
-                            }
-                        }
-                    },
-                    '2023-07-14': {
-                        customStyles: {
-                            container: {
-                                backgroundColor: AppUtil.danger,
-                                borderColor: AppUtil.danger,
-                                borderWidth: 4
-                            },
-                            text: {
-                                color: 'white',
-                                fontWeight: 'bold',
-                                lineHeight: 18
-                            }
-                        }
-                    }
-                }}
+                markedDates={calendars}
             />
         )
     }
@@ -393,6 +433,7 @@ function HomeScreen({ navigation }) {
                         onRefresh={() => {
                             setRefersh(true)
 
+                            loadCalendars()
                             loadBanners()
                             loadApiSholat()
                             loadUserData()
@@ -421,16 +462,36 @@ function HomeScreen({ navigation }) {
                                 <View>
                                     <Text
                                         style={[GlobalStyle.initialFont, { fontWeight: '700', fontSize: 22, textAlign: 'center' }]}
-                                    >3 May 2023</Text>
+                                    >{DateUtil.getCurrentDate()} {DateUtil.getCurrentMonthName()} {DateUtil.getCurrentYear()}</Text>
                                     <View
                                         style={{ marginTop: 13, alignItems: 'center' }}
                                     >
-                                        <Text
-                                            style={[GlobalStyle.initialFont, { fontSize: 16 }]}
-                                        >Masuk : 08:00</Text>
-                                        <Text
-                                            style={[GlobalStyle.initialFont, { fontSize: 16, marginTop: 6 }]}
-                                        >Pulang : 09:00</Text>
+                                        <View
+                                            style={{ flexDirection: 'row' }}
+                                        >
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 3, textAlign: 'right' }]}
+                                            >Masuk</Text>
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 1, textAlign: 'center' }]}
+                                            >:</Text>
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 3, textAlign: 'left' }]}
+                                            >{dataModalAbsen.absen ? dataModalAbsen.absen.presence_entry_hour : '-'}</Text>
+                                        </View>
+                                        <View
+                                            style={{ flexDirection: 'row', marginTop: 6 }}
+                                        >
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 3, textAlign: 'right' }]}
+                                            >Pulang</Text>
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 1, textAlign: 'center' }]}
+                                            >:</Text>
+                                            <Text
+                                                style={[GlobalStyle.initialFont, { fontSize: 16, flex: 3, textAlign: 'left' }]}
+                                            >{dataModalAbsen.absen ? (dataModalAbsen.absen.presence_exit_hour ? dataModalAbsen.absen.presence_exit_hour : '-') : '-'}</Text>
+                                        </View>
                                     </View>
                                 </View>
                                 <Divider style={{ marginVertical: 15 }} />

@@ -12,14 +12,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import FastImage from 'react-native-fast-image'
 import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
+import { useIsFocused } from "@react-navigation/native";
 
-function LoginScreen({ navigation }) {
-    const [email, setEmail] = useState('tomyntapss@gmail.com')
-    const [password, setPassword] = useState('12345678')
+function LoginScreen({ navigation, route }) {
+    const [email, setEmail] = useState('hannah@mail.com')
+    const [password, setPassword] = useState('hannah123')
     const [spinnerShow, setSpinnerShow] = useState(false)
     const [settings, setSettings] = useState({})
     const [cacheLoginCheck, setCacheLoginCheck] = useState(false)
-
+    const isFocused = useIsFocused()
     const toast = useToast()
 
     useEffect(() => {
@@ -27,6 +28,14 @@ function LoginScreen({ navigation }) {
         checkLogin()
         loadSettings()
     }, [])
+
+    useEffect(() => {
+        if (route.params && isFocused) {
+            if (route.params.is_logout) {
+                setCacheLoginCheck(true)
+            }
+        }
+    }, [isFocused])
 
     const checkLogin = async () => {
         const token = await AsyncStorage.getItem('api_token')

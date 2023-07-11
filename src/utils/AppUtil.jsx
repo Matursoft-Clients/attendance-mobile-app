@@ -4,5 +4,6 @@ export default {
     danger: '#f87171',
     primarySoft: '#f0f9ff',
     success: '#22c55e',
+    successSoft: '#86efac',
     gray: '#9ca3af'
 }

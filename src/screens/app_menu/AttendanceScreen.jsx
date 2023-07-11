@@ -12,6 +12,7 @@ import { useToast } from "react-native-toast-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 import Geolocation from 'react-native-geolocation-service';
+import FuncUtil from "../../utils/FuncUtil";
 
 function AttendanceScreen() {
     const [latitude, setLatitude] = useState('')
@@ -250,7 +251,7 @@ function AttendanceScreen() {
 
         } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
             text = 'Absensi'
-        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= presence_exit) {
+        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= settings.presence_exit) {
             text = 'Absensi Pulang'
         } else if (dailyAttendance.status == true && dailyAttendance.presence_exit_status) {
 
@@ -276,6 +277,7 @@ function AttendanceScreen() {
     }
 
     const _renderStatusLabel = () => {
+
         const dateObj = new Date()
 
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
@@ -294,7 +296,7 @@ function AttendanceScreen() {
         } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
             bgColor = AppUtil.warning
             displayText = 'Anda Belum Melakukan Absensi Masuk'
-        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= presence_exit) {
+        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= settings.presence_exit) {
             bgColor = AppUtil.warning
             displayText = 'Anda Belum Melakukan Absensi Pulang'
         } else if (dailyAttendance.status == true && dailyAttendance.presence_exit_status) {

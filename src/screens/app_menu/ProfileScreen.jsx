@@ -33,7 +33,9 @@ function ProfileScreen({ navigation }) {
         AsyncStorage.removeItem('api_token')
 
         setTimeout(() => {
-            navigation.navigate('LoginScreen')
+            navigation.navigate('LoginScreen', {
+                is_logout: true
+            })
         }, 1000);
     }
 
