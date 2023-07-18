@@ -21,6 +21,7 @@ function ProfileScreen({ navigation }) {
     const [refresh, setRefersh] = useState(false)
 
     const [name, setName] = useState('')
+    const [whatsappNumber, setWhatsappNumber] = useState('')
     const [password, setPassword] = useState('')
     const [passwordConfirmation, setPasswordConfirmation] = useState('')
 
@@ -71,6 +72,7 @@ function ProfileScreen({ navigation }) {
         const token = await AsyncStorage.getItem('api_token')
         var formData = new FormData();
         formData.append('name', name);
+        formData.append('whatsapp_number', whatsappNumber);
         formData.append('password', password);
         formData.append('password_confirmation', passwordConfirmation);
 
@@ -123,9 +125,9 @@ function ProfileScreen({ navigation }) {
                 Authorization: 'Bearer ' + token
             }
         }).then(async (res) => {
-            console.log(res.data.data)
             setUser(res.data.data)
             setName(res.data.data.name)
+            setWhatsappNumber(res.data.data.whatsapp_number)
         }).catch((err) => {
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
@@ -237,6 +239,16 @@ function ProfileScreen({ navigation }) {
                                 />
 
                                 <Input
+                                    style={{ marginTop: 20 }}
+                                    label={evaProps => <Text {...evaProps}>Nomor Whatsapp</Text>}
+                                    placeholder="Nama Lengkap"
+                                    value={whatsappNumber}
+                                    onChangeText={(val) => {
+                                        setWhatsappNumber(val)
+                                    }}
+                                />
+
+                                <Input
                                     style={{ marginTop: 15 }}
                                     label={evaProps => <Text {...evaProps}>Password Baru</Text>}
                                     placeholder="Password Baru"
@@ -324,6 +336,16 @@ function ProfileScreen({ navigation }) {
                                 >
                                     {user.name}
                                 </Text>
+                                <View
+                                    style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 7, gap: 5 }}
+                                >
+                                    <MaterialCommunityIcon color={'#414141'} name={'office-building'} size={18} />
+                                    <Text
+                                        style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
+                                    >
+                                        {user.branch.name}
+                                    </Text>
+                                </View>
                                 <Text
                                     style={[GlobalStyle.initialFont, { textAlign: 'center', marginTop: 10, fontSize: 14, color: 'white', backgroundColor: AppUtil.primary, alignSelf: 'center', paddingHorizontal: 13, paddingVertical: 6, borderRadius: 100 }]}
                                 >
@@ -337,6 +359,16 @@ function ProfileScreen({ navigation }) {
                                         style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
                                     >
                                         {user.email}
+                                    </Text>
+                                </View>
+                                <View
+                                    style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10, gap: 5 }}
+                                >
+                                    <MaterialCommunityIcon color={'#414141'} name={'whatsapp'} size={18} />
+                                    <Text
+                                        style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
+                                    >
+                                        {user.whatsapp_number}
                                     </Text>
                                 </View>
 

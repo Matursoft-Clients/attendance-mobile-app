@@ -362,7 +362,7 @@ function HomeScreen({ navigation }) {
             <Image
                 source={{ uri: item.image }}
                 width={width - 120}
-                height={70}
+                height={160}
                 borderRadius={5}
             />
         )

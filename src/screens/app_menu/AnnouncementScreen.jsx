@@ -10,6 +10,7 @@ import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications"
 import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
+import FastImage from "react-native-fast-image"
 
 function AnnouncementScreen({ navigation }) {
 
@@ -87,11 +88,15 @@ function AnnouncementScreen({ navigation }) {
                         })
                     }}
                 >
-                    {/* <Text
-                        style={[GlobalStyle.initialFont, { marginBottom: 4, backgroundColor: AppUtil.primary, color: 'white', alignSelf: 'flex-start', fontSize: 12, paddingHorizontal: 7, borderRadius: 3.5, paddingVertical: 2.5 }]}
-                    >Belum dibaca</Text> */}
+                    <FastImage
+                        source={{
+                            uri: e.thumbnail
+                        }}
+                        style={{ width: '100%', height: 125, borderRadius: 5 }}
+                        resizeMode={FastImage.resizeMode.cover}
+                    />
                     <Text
-                        style={[{ fontWeight: '700', fontSize: 15 }, GlobalStyle.initialFont]}
+                        style={[{ fontWeight: '700', marginTop: 10, fontSize: 15 }, GlobalStyle.initialFont]}
                     >{e.title}</Text>
                     <Text
                         style={[GlobalStyle.initialFont, { marginTop: 8, fontSize: 12 }]}

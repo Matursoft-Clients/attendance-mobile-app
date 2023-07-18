@@ -23,7 +23,6 @@ function AttendanceScreen() {
     const [dailyAttendance, setDailyAttendance] = useState({})
     const [settings, setSettings] = useState({})
     const [spinnerShow, setSpinnerShow] = useState(false)
-    const [refreshing, setRefreshing] = useState(false);
 
     const toast = useToast()
 
@@ -31,6 +30,7 @@ function AttendanceScreen() {
         requestCameraPermission()
         loadTanggalDanWaktuSekarang()
         loadSettings()
+        loadUserData()
         loadDailyAttendance()
     }, [])
 
@@ -63,6 +63,45 @@ function AttendanceScreen() {
             console.warn(err);
         }
     };
+
+    const loadUserData = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+
+        axios.get(`${API_URL}/employee/user`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setLatitude(res.data.data.branch.presence_location_latitude)
+            setLongitude(res.data.data.branch.presence_location_longitude)
+        }).catch((err) => {
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     const loadDailyAttendance = async () => {
         const token = await AsyncStorage.getItem('api_token')
@@ -174,8 +213,6 @@ function AttendanceScreen() {
                     }
                 })
             })
-
-
     }
 
     const doAbsenPulang = async () => {
@@ -332,8 +369,6 @@ function AttendanceScreen() {
                         Authorization: 'Bearer ' + token
                     }
                 }).then(async (res) => {
-                    setLatitude(res.data.data.settings.presence_location_latitude)
-                    setLongitude(res.data.data.settings.presence_location_longitude)
                     setRadius(res.data.data.settings.presence_meter_radius)
                     setSettings(res.data.data.settings)
 

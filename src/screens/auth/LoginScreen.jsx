@@ -1,5 +1,5 @@
 import { Button, Input, Text } from "@ui-kitten/components";
-import { Dimensions, Image, ScrollView, View } from "react-native";
+import { Dimensions, Image, Linking, Modal, ScrollView, View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
 import AppUtil from "../../utils/AppUtil";
 import GlobalStyle from "../../utils/GlobalStyle";
@@ -13,20 +13,21 @@ import FastImage from 'react-native-fast-image'
 import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { useIsFocused } from "@react-navigation/native";
+import VersionCheck from 'react-native-version-check';
 
 function LoginScreen({ navigation, route }) {
-    const [email, setEmail] = useState('hannah@mail.com')
-    const [password, setPassword] = useState('hannah123')
+    const [email, setEmail] = useState('tomyntapss@gmail.com')
+    const [password, setPassword] = useState('maturnuwun')
     const [spinnerShow, setSpinnerShow] = useState(false)
     const [settings, setSettings] = useState({})
     const [cacheLoginCheck, setCacheLoginCheck] = useState(false)
+    const [modalUpdateAppVisible, setModalUpdateAppVisible] = useState(false)
     const isFocused = useIsFocused()
     const toast = useToast()
 
     useEffect(() => {
         SplashScreen.hide()
         checkLogin()
-        loadSettings()
     }, [])
 
     useEffect(() => {
@@ -50,10 +51,10 @@ function LoginScreen({ navigation, route }) {
                     screen: 'HomeScreen'
                 })
             }).catch((err) => {
-                setCacheLoginCheck(true)
+                loadSettings()
             })
         } else {
-            setCacheLoginCheck(true)
+            loadSettings()
         }
     }
 
@@ -61,6 +62,11 @@ function LoginScreen({ navigation, route }) {
         axios.get(`${API_URL}/settings`)
             .then(async (res) => {
                 setSettings(res.data.data.settings)
+                if (res.data.data.settings.mobile_app_version != VersionCheck.getCurrentVersion()) {
+                    setModalUpdateAppVisible(true)
+                } else {
+                    setCacheLoginCheck(true)
+                }
             }).catch((err) => {
                 if (err.response.status == 422) {
                     toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
@@ -151,6 +157,45 @@ function LoginScreen({ navigation, route }) {
         <SafeAreaView
             style={{ backgroundColor: 'white', height: '100%' }}
         >
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalUpdateAppVisible}>
+                <View style={{ width: '100%', height: Dimensions.get('window').height, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <View
+                        style={{ height: Dimensions.get('window').height - 125, paddingVertical: 35, backgroundColor: 'white', paddingHorizontal: 25, marginTop: 125, borderTopEndRadius: 10, borderTopStartRadius: 10, bottom: 0, justifyContent: 'center' }}
+                    >
+                        <FastImage
+                            source={require('./../../assets/images/rocket.png')}
+                            style={{
+                                width: Dimensions.get('window').width - 50,
+                                height: Dimensions.get('window').width - 50,
+                                marginTop: -50
+                            }}
+                            resizeMode={FastImage.resizeMode.contain}
+                        />
+                        <Text
+                            style={[GlobalStyle.initialFont, { textAlign: 'center', fontWeight: 'bold', fontSize: 21, marginTop: -((Dimensions.get('window').width - 50) - ((Dimensions.get('window').width - 50) / 1.25)) }]}
+                        >
+                            Update Terbaru Telah Tersedia
+                        </Text>
+                        <Text
+                            style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14, marginTop: 7 }]}
+                        >
+                            Update aplikasi ke versi terbaru untuk tetap menggunakannya
+                        </Text>
+                        <Button
+                            onPress={() => {
+                                Linking.openURL(settings.play_store_url)
+                            }}
+                            style={{ marginTop: 35, backgroundColor: AppUtil.primary }}
+                        >
+                            {evaProps => <Text {...evaProps}>Update Aplikasi</Text>}
+                        </Button>
+                    </View>
+                </View>
+            </Modal>
+
             {
                 cacheLoginCheck ?
 

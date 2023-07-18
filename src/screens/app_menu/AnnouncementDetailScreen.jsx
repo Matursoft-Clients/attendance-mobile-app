@@ -1,6 +1,6 @@
 import { Button, Card, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
-import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
+import { Dimensions, Image, Linking, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import AppUtil from "../../utils/AppUtil"
 import GlobalStyle from "../../utils/GlobalStyle"
@@ -9,14 +9,32 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { useToast } from "react-native-toast-notifications"
 import { API_URL } from "@env"
+import FastImage from "react-native-fast-image"
+import AutoHeightWebView from "react-native-autoheight-webview-fix"
 
 function AnnouncementDetailScreen({ route }) {
     const [announcement, setAnnouncement] = useState('')
     const [refresh, setRefersh] = useState(false)
+    const [imageWidth, setImageWidth] = useState(0)
+    const [imageHeight, setImageHeight] = useState(0)
 
     useEffect(() => {
         loadAnnouncementDetail(route.params.slug)
+
+        getImageSize.then((res) => {
+            setImageWidth(Dimensions.get('window').width - 50)
+            setImageHeight(res.height * ((Dimensions.get('window').width - 50) / res.width))
+        })
     }, [])
+
+    const getImageSize = new Promise(
+        (resolve, reject) => {
+            Image.getSize(announcement.thumbnail, (width, height) => {
+                resolve({ width, height });
+            });
+        },
+        (error) => reject(error)
+    );
 
     const toast = useToast()
 
@@ -58,6 +76,14 @@ function AnnouncementDetailScreen({ route }) {
         })
     }
 
+    const shouldStartLoadWithRequest = (req) => {
+        // open the link in native browser
+        Linking.openURL(req.url);
+
+        // returning false prevents WebView to navigate to new URL
+        return false;
+    };
+
     return (
         <SafeAreaView
             style={{ height: '100%', backgroundColor: 'white' }}
@@ -90,19 +116,32 @@ function AnnouncementDetailScreen({ route }) {
                                 Detail Pengumuman
                             </Text>
                         </View>
-
+                        <FastImage
+                            source={{
+                                uri: announcement.thumbnail
+                            }}
+                            style={{ width: imageWidth, height: imageHeight, borderRadius: 5 }}
+                            resizeMode={FastImage.resizeMode.contain}
+                        />
                         <Text
-                            style={[{ fontWeight: '700', fontSize: 16 }, GlobalStyle.initialFont]}
+                            style={[{ fontWeight: '700', fontSize: 16, marginTop: 10 }, GlobalStyle.initialFont]}
                         >{announcement.title}</Text>
                         <Text
                             style={[GlobalStyle.initialFont, { marginTop: 8, fontSize: 12 }]}
                         >{announcement.created_at_format}</Text>
-
-                        <Text
-                            style={[GlobalStyle.initialFont, { marginTop: 15, fontSize: 13.5 }]}
-                        >
-                            {announcement.content}
-                        </Text>
+                        <AutoHeightWebView
+                            style={{ width: Dimensions.get('window').width - 50, marginTop: 20 }}
+                            source={{ html: announcement.content }}
+                            scalesPageToFit={true}
+                            customStyle={`
+                                a {
+                                    text-decoration: none;
+                                    color: blue
+                                }
+                            `}
+                            viewportContent={'width=device-width, user-scalable=no'}
+                            onShouldStartLoadWithRequest={shouldStartLoadWithRequest}
+                        />
                     </View>
 
                 </ContainerComponent>
