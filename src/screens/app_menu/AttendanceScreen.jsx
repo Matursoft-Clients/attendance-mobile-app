@@ -31,7 +31,6 @@ function AttendanceScreen() {
         requestCameraPermission()
         loadTanggalDanWaktuSekarang()
         loadSettings()
-        loadUserData()
         loadDailyAttendance()
     }, [])
 
@@ -360,6 +359,7 @@ function AttendanceScreen() {
     const _renderStatusLabel = () => {
 
         const dateObj = new Date()
+        dateObj.setHours(7)
 
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
@@ -406,8 +406,9 @@ function AttendanceScreen() {
             }
         }).then(async (res) => {
             if (res.data.data) {
+                setLatitude(res.data.data.custom_attendance_location.presence_location_latitude)
+                setLongitude(res.data.data.custom_attendance_location.presence_location_longitude)
 
-            } else {
                 axios.get(`${API_URL}/settings`, {
                     headers: {
                         Authorization: 'Bearer ' + token
@@ -444,6 +445,8 @@ function AttendanceScreen() {
                         })
                     }
                 })
+            } else {
+                loadUserData()
             }
         }).catch((err) => {
             if (err.response.status == 422) {
@@ -487,7 +490,6 @@ function AttendanceScreen() {
             radius: radius
         },
     ];
-
 
     const mapLayers = [
         {

@@ -53,22 +53,22 @@ function HomeScreen({ navigation }) {
 
                     if (dateRes.absen.presence_entry_status == 'on_time' && !dateRes.absen.presence_exit_status) {
                         bgColor = AppUtil.success
-                        borderColor = AppUtil.successSoft
+                        borderColor = AppUtil.graySoft
                     } else if (dateRes.absen.presence_entry_status == 'on_time' && dateRes.absen.presence_exit_status == 'early') {
                         bgColor = AppUtil.success
-                        borderColor = AppUtil.warning
+                        borderColor = AppUtil.dangerSoft
                     } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status == 'early') {
-                        bgColor = AppUtil.warning
-                        borderColor = AppUtil.warning
+                        bgColor = AppUtil.dangerDark
+                        borderColor = AppUtil.dangerSoft
                     } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status) {
-                        bgColor = AppUtil.warning
+                        bgColor = AppUtil.dangerDark
                         borderColor = AppUtil.success
                     } else if (dateRes.absen.presence_entry_status == 'late' && !dateRes.absen.presence_exit_status) {
-                        bgColor = AppUtil.warning
-                        borderColor = AppUtil.successSoft
+                        bgColor = AppUtil.dangerDark
+                        borderColor = AppUtil.graySoft
                     } else if (dateRes.absen.presence_entry_status == 'not_present') {
-                        bgColor = AppUtil.danger
-                        borderColor = AppUtil.danger
+                        bgColor = '#FFFFFF'
+                        borderColor = '#FFFFFF'
                     }
 
                     dataCalendarObj[`${DateUtil.getCurrentYear()}-${DateUtil.getCurrentMonth()}-${dateRes.day}`] = {
@@ -76,12 +76,12 @@ function HomeScreen({ navigation }) {
                             container: {
                                 backgroundColor: bgColor,
                                 borderColor: borderColor,
-                                borderWidth: 5
+                                borderWidth: 6
                             },
                             text: {
                                 color: 'white',
                                 fontWeight: 'bold',
-                                lineHeight: 17
+                                lineHeight: 16
                             }
                         }
                     }
@@ -420,6 +420,8 @@ function HomeScreen({ navigation }) {
                 }}
                 markingType={'custom'}
                 markedDates={calendars}
+                disableArrowLeft={true}
+                disableArrowRight={true}
             />
         )
     }
