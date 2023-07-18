@@ -12,7 +12,8 @@ import { useToast } from "react-native-toast-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 import Geolocation from 'react-native-geolocation-service';
-import FuncUtil from "../../utils/FuncUtil";
+import NetInfo from "@react-native-community/netinfo";
+import haversine from 'haversine-distance'
 
 function AttendanceScreen() {
     const [latitude, setLatitude] = useState('')
@@ -160,118 +161,161 @@ function AttendanceScreen() {
     }
 
     const doAbsenMasuk = async () => {
+        setSpinnerShow(true);
         const token = await AsyncStorage.getItem('api_token')
 
-        setSpinnerShow(true);
-        Geolocation.getCurrentPosition(
-            (position) => {
-                axios.post(`${API_URL}/presence/entry`, {
-                    address: 'fsdfsd',
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    reference_address: 'fsdfsd',
-                    reference_latitude: position.coords.latitude,
-                    reference_longitude: position.coords.longitude,
-                }, {
-                    headers: {
-                        Authorization: 'Bearer ' + token
-                    }
-                }).then(async (res) => {
-                    setSpinnerShow(false);
-                    toast.show(res.data.msg, {
-                        type: 'success',
-                        placement: 'center'
-                    })
-
-                    reloadScreen()
-                }).catch((err) => {
-                    setSpinnerShow(false);
-                    if (err.response.status == 422) {
-                        toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-                    } else if (err.response.status == 498) {
-                        toast.show(err.response.data.msg, {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-
-                        navigation.navigate('LoginScreen')
-                    } else if (err.response.status == 406) {
-                        toast.show(err.response.data.msg, {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-
-                        navigation.navigate('LoginScreen')
-                    } else {
-                        toast.show('Unhandled error, please contact administrator for report', {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-                    }
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+                setSpinnerShow(false);
+                toast.show('Periksa koneksi internet anda untuk melakukan absensi', {
+                    type: 'danger',
+                    placement: 'center'
                 })
-            })
+            } else {
+                Geolocation.getCurrentPosition(
+                    (position) => {
+
+                        const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+                        const branchLocation = { latitude: latitude, longitude: longitude }
+
+                        if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
+                            setSpinnerShow(false);
+
+                            toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
+                                type: 'danger',
+                                placement: 'center'
+                            })
+                        } else {
+                            axios.post(`${API_URL}/presence/entry`, {
+                                address: 'address',
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                            }, {
+                                headers: {
+                                    Authorization: 'Bearer ' + token
+                                }
+                            }).then(async (res) => {
+                                setSpinnerShow(false);
+                                toast.show(res.data.msg, {
+                                    type: 'success',
+                                    placement: 'center'
+                                })
+
+                                reloadScreen()
+                            }).catch((err) => {
+                                setSpinnerShow(false);
+                                if (err.response.status == 422) {
+                                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+                                } else if (err.response.status == 498) {
+                                    toast.show(err.response.data.msg, {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+
+                                    navigation.navigate('LoginScreen')
+                                } else if (err.response.status == 406) {
+                                    toast.show(err.response.data.msg, {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+
+                                    navigation.navigate('LoginScreen')
+                                } else {
+                                    toast.show('Unhandled error, please contact administrator for report', {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+                                }
+                            })
+                        }
+                    })
+            }
+        });
     }
 
     const doAbsenPulang = async () => {
         const token = await AsyncStorage.getItem('api_token')
-
         setSpinnerShow(true);
-        Geolocation.getCurrentPosition(
-            (position) => {
-                axios.post(`${API_URL}/presence/exit`, {
-                    address: 'address',
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                }, {
-                    headers: {
-                        Authorization: 'Bearer ' + token
-                    }
-                }).then(async (res) => {
-                    setSpinnerShow(false);
-                    toast.show(res.data.msg, {
-                        type: 'success',
-                        placement: 'center'
-                    })
 
-                    reloadScreen()
-                }).catch((err) => {
-                    setSpinnerShow(false);
-                    if (err.response.status == 422) {
-                        toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-                    } else if (err.response.status == 498) {
-                        toast.show(err.response.data.msg, {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-
-                        navigation.navigate('LoginScreen')
-                    } else if (err.response.status == 406) {
-                        toast.show(err.response.data.msg, {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-
-                        navigation.navigate('LoginScreen')
-                    } else {
-                        toast.show('Unhandled error, please contact administrator for report', {
-                            type: 'danger',
-                            placement: 'center'
-                        })
-                    }
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+                setSpinnerShow(false);
+                toast.show('Periksa koneksi internet anda untuk melakukan absensi pulang', {
+                    type: 'danger',
+                    placement: 'center'
                 })
-            },
-            (error) => {
-                // See error code charts below.
-                console.log(error.code, error.message);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
+            } else {
+                Geolocation.getCurrentPosition(
+                    (position) => {
+
+                        const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+                        const branchLocation = { latitude: latitude, longitude: longitude }
+
+                        if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
+                            setSpinnerShow(false);
+
+                            toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
+                                type: 'danger',
+                                placement: 'center'
+                            })
+                        } else {
+                            axios.post(`${API_URL}/presence/exit`, {
+                                address: 'address',
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                            }, {
+                                headers: {
+                                    Authorization: 'Bearer ' + token
+                                }
+                            }).then(async (res) => {
+                                setSpinnerShow(false);
+                                toast.show(res.data.msg, {
+                                    type: 'success',
+                                    placement: 'center'
+                                })
+
+                                reloadScreen()
+                            }).catch((err) => {
+                                setSpinnerShow(false);
+                                if (err.response.status == 422) {
+                                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+                                } else if (err.response.status == 498) {
+                                    toast.show(err.response.data.msg, {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+
+                                    navigation.navigate('LoginScreen')
+                                } else if (err.response.status == 406) {
+                                    toast.show(err.response.data.msg, {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+
+                                    navigation.navigate('LoginScreen')
+                                } else {
+                                    toast.show('Unhandled error, please contact administrator for report', {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+                                }
+                            })
+                        }
+                    },
+                    (error) => {
+                        // See error code charts below.
+                        console.log(error.code, error.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                );
+            }
+        })
     }
 
     const _renderTombolAbsensi = () => {

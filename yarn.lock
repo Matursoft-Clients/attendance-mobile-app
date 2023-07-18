@@ -1737,6 +1737,11 @@
     prompts "^2.4.0"
     semver "^6.3.0"
 
+"@react-native-community/netinfo@^9.4.1":
+  version "9.4.1"
+  resolved "https://registry.npmjs.org/@react-native-community/netinfo/-/netinfo-9.4.1.tgz"
+  integrity sha512-dAbY5mfw+6Kas/GJ6QX9AZyY+K+eq9ad4Su6utoph/nxyH3whp5cMSgRNgE2VhGQVRZ/OG0qq3IaD3+wzoqJXw==
+
 "@react-native/assets-registry@^0.72.0":
   version "0.72.0"
   resolved "https://registry.npmjs.org/@react-native/assets-registry/-/assets-registry-0.72.0.tgz"
@@ -3842,6 +3847,11 @@ has@^1.0.3:
   integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
   dependencies:
     function-bind "^1.1.1"
+
+haversine-distance@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/haversine-distance/-/haversine-distance-1.2.1.tgz"
+  integrity sha512-rQpG89d6NlAis0eqOSFXDqNU/GZcMPlHNVMqTSzD16niD9s1fDK8T6kwrK0WJ7OMU+iRNy3cgGYnNQihMqmaHg==
 
 hermes-estree@0.12.0:
   version "0.12.0"
@@ -6193,15 +6203,15 @@ react-native-version-check@^3.4.7:
     lodash.pick "^4.4.0"
     semver "^6.1.1"
 
-"react-native-webview@>= 5.4.0":
-  version "11.26.1"
-  resolved "https://registry.npmjs.org/react-native-webview/-/react-native-webview-11.26.1.tgz"
-  integrity sha512-hC7BkxOpf+z0UKhxFSFTPAM4shQzYmZHoELa6/8a/MspcjEP7ukYKpuSUTLDywQditT8yI9idfcKvfZDKQExGw==
+react-native-webview@^13.2.3, "react-native-webview@>= 5.4.0":
+  version "13.2.3"
+  resolved "https://registry.npmjs.org/react-native-webview/-/react-native-webview-13.2.3.tgz"
+  integrity sha512-f2cJ61cfpNzry0KLJg3HiwrGhhVnOLwbcHeQVMRldWTwzqSptTzk1sTO8QulYt0nVkUNw1xeboD0SLkUeaQB9Q==
   dependencies:
     escape-string-regexp "2.0.0"
     invariant "2.2.4"
 
-react-native@*, "react-native@^0.0.0-0 || 0.60 - 0.72 || 1000.0.0", "react-native@>= 0.30.0", "react-native@>= 0.59.0", react-native@>=0.48.0, react-native@>=0.57.0, react-native@>=0.60.0, react-native@0.72.1:
+react-native@*, "react-native@^0.0.0-0 || 0.60 - 0.72 || 1000.0.0", "react-native@>= 0.30.0", "react-native@>= 0.59.0", react-native@>=0.48.0, react-native@>=0.57.0, react-native@>=0.59, react-native@>=0.60.0, react-native@0.72.1:
   version "0.72.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.72.1.tgz"
   integrity sha512-O9cIVD++kt2XQl0XLCUGUgwSKr8xp+yo0ho5QK6KYWJrCFnnvQLTKL0+HD0rZUcuqFfGknHQJh3h0moQO2EMDg==

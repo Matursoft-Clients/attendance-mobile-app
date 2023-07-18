@@ -25,7 +25,6 @@ function ProfileScreen({ navigation }) {
     const [password, setPassword] = useState('')
     const [passwordConfirmation, setPasswordConfirmation] = useState('')
 
-
     useEffect(() => {
         loadUserData()
     }, [])
@@ -343,7 +342,7 @@ function ProfileScreen({ navigation }) {
                                     <Text
                                         style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
                                     >
-                                        {user.branch.name}
+                                        {user.branch ? user.branch.name : ''}
                                     </Text>
                                 </View>
                                 <Text
