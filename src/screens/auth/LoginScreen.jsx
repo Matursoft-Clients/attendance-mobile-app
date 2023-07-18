@@ -16,8 +16,8 @@ import { useIsFocused } from "@react-navigation/native";
 import VersionCheck from 'react-native-version-check';
 
 function LoginScreen({ navigation, route }) {
-    const [email, setEmail] = useState('tomyntapss@gmail.com')
-    const [password, setPassword] = useState('maturnuwun')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
     const [spinnerShow, setSpinnerShow] = useState(false)
     const [settings, setSettings] = useState({})
     const [cacheLoginCheck, setCacheLoginCheck] = useState(false)
