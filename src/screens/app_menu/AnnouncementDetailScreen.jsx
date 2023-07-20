@@ -20,12 +20,14 @@ function AnnouncementDetailScreen({ route }) {
 
     useEffect(() => {
         loadAnnouncementDetail(route.params.slug)
+    }, [])
 
+    useEffect(() => {
         getImageSize.then((res) => {
             setImageWidth(Dimensions.get('window').width - 50)
             setImageHeight(res.height * ((Dimensions.get('window').width - 50) / res.width))
         })
-    }, [])
+    }, [announcement])
 
     const getImageSize = new Promise(
         (resolve, reject) => {

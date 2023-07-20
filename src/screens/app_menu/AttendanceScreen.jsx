@@ -74,6 +74,43 @@ function AttendanceScreen() {
         }).then(async (res) => {
             setLatitude(res.data.data.branch.presence_location_latitude)
             setLongitude(res.data.data.branch.presence_location_longitude)
+
+            axios.get(`${API_URL}/settings`, {
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
+            }).then(async (res) => {
+                setRadius(res.data.data.settings.presence_meter_radius)
+                setSettings(res.data.data.settings)
+
+                setMapLoaded(true)
+            }).catch((err) => {
+                if (err.response.status == 422) {
+                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                } else if (err.response.status == 498) {
+                    toast.show(err.response.data.msg, {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+
+                    navigation.navigate('LoginScreen')
+                } else if (err.response.status == 406) {
+                    toast.show(err.response.data.msg, {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+
+                    navigation.navigate('LoginScreen')
+                } else {
+                    toast.show('Unhandled error, please contact administrator for report', {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                }
+            })
         }).catch((err) => {
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {

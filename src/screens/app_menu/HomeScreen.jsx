@@ -16,7 +16,6 @@ import DateUtil from "../../utils/DateUtil";
 function HomeScreen({ navigation }) {
 
     const [banners, setBanners] = useState([])
-    const [jadwalSholat, setJadwalSholat] = useState({})
     const [currSholat, setCurrSholat] = useState('')
     const [currWaktuSholat, setCurrWaktuSholat] = useState('')
     const [user, setUser] = useState({})
@@ -66,6 +65,9 @@ function HomeScreen({ navigation }) {
                     } else if (dateRes.absen.presence_entry_status == 'late' && !dateRes.absen.presence_exit_status) {
                         bgColor = AppUtil.dangerDark
                         borderColor = AppUtil.graySoft
+                    } else if (dateRes.absen.presence_entry_status == 'on_time' && dateRes.absen.presence_exit_status == 'on_time') {
+                        bgColor = AppUtil.success
+                        borderColor = AppUtil.success
                     } else if (dateRes.absen.presence_entry_status == 'not_present') {
                         bgColor = '#FFFFFF'
                         borderColor = '#FFFFFF'
@@ -79,7 +81,7 @@ function HomeScreen({ navigation }) {
                                 borderWidth: 6
                             },
                             text: {
-                                color: 'white',
+                                color: bgColor == '#FFFFFF' && borderColor == '#FFFFFF' ? '#343434' : 'white',
                                 fontWeight: 'bold',
                                 lineHeight: 16
                             }
@@ -123,7 +125,42 @@ function HomeScreen({ navigation }) {
 
         axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${dateObj.getFullYear()}/${dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() + 1 : `0` + (dateObj.getMonth() + 1)}/${dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()}`)
             .then((res) => {
-                setJadwalSholat(res.data.data.jadwal)
+                const jadwalSholat = res.data.data.jadwal
+
+                const dateObj = new Date()
+
+                let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
+                let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
+                let currHoursMinutes = `${currHours}:${currMinutes}`;
+                let a = null;
+                let b = null;
+
+                for (const key in jadwalSholat) {
+                    if (Object.hasOwnProperty.call(jadwalSholat, key)) {
+                        if (key != 'tanggal' && key != 'date') {
+                            if (currHoursMinutes <= jadwalSholat[key]) {
+                                setCurrSholat(key)
+                                a = key
+                                setCurrWaktuSholat(jadwalSholat[key])
+                                b = jadwalSholat[key]
+                                break
+                            }
+                        }
+                    }
+                }
+
+                if (!a && !b) {
+                    const newDateObj = new Date()
+                    newDateObj.setDate(newDateObj.getDate() + 1)
+
+                    axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
+                        .then((res) => {
+                            const jadwal = res.data.data.jadwal;
+
+                            setCurrSholat('Imsak')
+                            setCurrWaktuSholat(jadwal.imsak)
+                        })
+                }
             })
     }
 
@@ -213,57 +250,6 @@ function HomeScreen({ navigation }) {
             setModalVisible(true)
         }
     }
-
-    const _renderApiSholat = useMemo(() => {
-        const dateObj = new Date()
-
-        let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
-        let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
-        let currHoursMinutes = `${currHours}:${currMinutes}`;
-
-        for (const key in jadwalSholat) {
-            if (Object.hasOwnProperty.call(jadwalSholat, key)) {
-                if (key != 'tanggal' && key != 'date') {
-                    if (currHoursMinutes <= jadwalSholat[key]) {
-                        setCurrSholat(key)
-                        setCurrWaktuSholat(jadwalSholat[key])
-                        break
-                    }
-                }
-            }
-        }
-
-        if (!currSholat && !currWaktuSholat) {
-            const newDateObj = new Date()
-            newDateObj.setDate(newDateObj.getDate() + 1)
-
-            axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
-                .then((res) => {
-                    const jadwal = res.data.data.jadwal;
-
-                    setCurrSholat('Imsak')
-                    setCurrWaktuSholat(jadwal.imsak)
-                })
-        }
-
-        return (
-            <View
-                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 6 }}
-            >
-                <Icon name="mosque" size={20} color={AppUtil.primary} />
-                <View
-                    style={{ flexDirection: 'row', alignItems: 'center' }}
-                >
-                    <Text
-                        style={[GlobalStyle.initialFont, { fontSize: 15 }]}
-                    >Kabupaten Cilacap, {currSholat}</Text>
-                    <Text
-                        style={[GlobalStyle.initialFont, { fontSize: 15, fontWeight: 700, color: AppUtil.primary }]}> {currWaktuSholat}</Text>
-                </View>
-
-            </View>
-        )
-    }, [currWaktuSholat])
 
     const _renderTombolAbsen = useMemo(() => {
         const dateObj = new Date()
@@ -525,7 +511,23 @@ function HomeScreen({ navigation }) {
                             style={[GlobalStyle.initialFont, { textAlign: 'center', marginTop: 1, fontWeight: '700', fontSize: 16, color: AppUtil.primary }]}
                         >{user.name}</Text>
 
-                        {_renderApiSholat}
+                        {
+                            <View
+                                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 6 }}
+                            >
+                                <Icon name="mosque" size={20} color={AppUtil.primary} />
+                                <View
+                                    style={{ flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <Text
+                                        style={[GlobalStyle.initialFont, { fontSize: 15 }]}
+                                    >Kabupaten Cilacap, {currSholat}</Text>
+                                    <Text
+                                        style={[GlobalStyle.initialFont, { fontSize: 15, fontWeight: 700, color: AppUtil.primary }]}> {currWaktuSholat}</Text>
+                                </View>
+
+                            </View>
+                        }
                         <View>
                             <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', marginTop: 13 }}>
                                 {
