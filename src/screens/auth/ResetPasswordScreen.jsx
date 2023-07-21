@@ -35,6 +35,7 @@ function ResetPasswordScreen({ navigation, route }) {
     );
 
     useEffect(() => {
+        console.log('start')
         setEmail(route.params.email)
         setToken(route.params.token)
     }, [])

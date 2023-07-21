@@ -18,6 +18,7 @@ function ForgotPasswordScreen({ navigation }) {
     const toast = useToast()
 
     const doSendForgotPasswordEmail = () => {
+        console.log('test')
         setSpinnerShow(true);
 
         axios.post(`${API_URL}/employee/forgot-password`, {

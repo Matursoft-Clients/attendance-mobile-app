@@ -461,6 +461,7 @@ function AttendanceScreen() {
 
     const loadSettings = async () => {
         const token = await AsyncStorage.getItem('api_token')
+        console.log(token)
 
         axios.get(`${API_URL}/custom-attendance-locations`, {
             headers: {

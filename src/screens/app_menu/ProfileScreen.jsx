@@ -125,6 +125,7 @@ function ProfileScreen({ navigation }) {
 
     const loadUserData = async () => {
         const token = await AsyncStorage.getItem('api_token')
+        console.log(token)
 
         axios.get(`${API_URL}/employee/user`, {
             headers: {

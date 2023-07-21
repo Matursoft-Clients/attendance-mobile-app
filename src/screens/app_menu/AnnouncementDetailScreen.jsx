@@ -42,6 +42,7 @@ function AnnouncementDetailScreen({ route }) {
 
     const loadAnnouncementDetail = async (slug) => {
         const token = await AsyncStorage.getItem('api_token')
+        console.log(token)
 
         axios.get(`${API_URL}/announcements/${slug}`, {
             headers: {

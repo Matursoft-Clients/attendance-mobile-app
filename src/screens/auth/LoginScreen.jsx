@@ -98,63 +98,63 @@ function LoginScreen({ navigation, route }) {
     }
 
     const doLogin = () => {
-        DeviceInfo.getUniqueId().then((uniqueId) => {
-            setSpinnerShow(true);
+        const uniqueId = DeviceInfo.getUniqueIdSync();
+        setSpinnerShow(true);
 
-            axios.post(`${API_URL}/employee/login`, {
-                device_name: DeviceInfo.getDeviceNameSync(),
-                device_id: uniqueId,
-                email: email,
-                password: password
-            }).then(async (res) => {
-                setSpinnerShow(false);
+        axios.post(`${API_URL}/employee/login`, {
+            device_name: DeviceInfo.getDeviceNameSync(),
+            device_id: uniqueId,
+            email: email,
+            password: password
+        }).then(async (res) => {
+            setSpinnerShow(false);
 
-                try {
-                    await AsyncStorage.setItem('api_token', res.data.data.token)
+            try {
+                await AsyncStorage.setItem('api_token', res.data.data.token)
 
-                    toast.show(res.data.msg, {
-                        type: 'success',
-                        placement: 'center'
+                toast.show(res.data.msg, {
+                    type: 'success',
+                    placement: 'center'
+                })
+                setTimeout(() => {
+                    navigation.navigate('AppMenu', {
+                        screen: 'HomeScreen'
                     })
-                    setTimeout(() => {
-                        navigation.navigate('AppMenu', {
-                            screen: 'HomeScreen'
-                        })
-                    }, 500);
-                } catch (error) {
-                    toast.show('Unhandled error, please contact administrator for report', {
-                        type: 'danger',
-                        placement: 'center'
-                    })
-                }
-            }).catch((err) => {
-                setSpinnerShow(false);
-                if (err.response.status == 422) {
-                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
-                        type: 'danger',
-                        placement: 'center'
-                    })
-                } else if (err.response.status == 498) {
-                    toast.show(err.response.data.msg, {
-                        type: 'danger',
-                        placement: 'center'
-                    })
+                }, 500);
+            } catch (error) {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        }).catch((err) => {
+            setSpinnerShow(false);
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
 
-                    navigation.navigate('LoginScreen')
-                } else if (err.response.status == 406) {
-                    toast.show(err.response.data.msg, {
-                        type: 'danger',
-                        placement: 'center'
-                    })
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
 
-                    navigation.navigate('LoginScreen')
-                } else {
-                    toast.show('Unhandled error, please contact administrator for report', {
-                        type: 'danger',
-                        placement: 'center'
-                    })
-                }
-            })
+                navigation.navigate('LoginScreen')
+            } else {
+                console.log(err)
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
         })
     }
 

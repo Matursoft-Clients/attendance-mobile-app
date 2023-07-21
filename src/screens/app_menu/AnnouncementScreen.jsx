@@ -30,6 +30,7 @@ function AnnouncementScreen({ navigation }) {
     const loadAnnouncements = async (url = null, cb) => {
         setSpinnerShow(true);
         const token = await AsyncStorage.getItem('api_token')
+        console.log(token)
 
         axios.get(url ? url : `${API_URL}/announcements`, {
             headers: {

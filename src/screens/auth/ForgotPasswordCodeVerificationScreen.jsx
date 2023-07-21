@@ -16,6 +16,7 @@ function ForgotPasswordCodeVerificationScreen({ navigation, route }) {
     const [spinnerShow, setSpinnerShow] = useState(false)
 
     useEffect(() => {
+        console.log('start')
         setEmail(route.params.email)
     }, [])
 
