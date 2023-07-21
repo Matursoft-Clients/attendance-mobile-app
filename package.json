@@ -28,6 +28,7 @@
     "react-native-geolocation-service": "^5.3.1",
     "react-native-image-picker": "^5.6.0",
     "react-native-leaflet-ts": "^0.2.18",
+    "react-native-permissions": "^3.8.4",
     "react-native-reanimated": "^2.17.0",
     "react-native-safe-area-context": "^4.6.3",
     "react-native-screens": "^3.22.0",
