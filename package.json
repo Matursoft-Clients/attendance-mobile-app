@@ -23,6 +23,7 @@
     "react-native": "0.72.1",
     "react-native-autoheight-webview-fix": "^1.5.5",
     "react-native-calendars": "^1.1299.0",
+    "react-native-device-info": "^10.8.0",
     "react-native-dotenv": "^3.4.9",
     "react-native-fast-image": "^8.6.3",
     "react-native-geolocation-service": "^5.3.1",

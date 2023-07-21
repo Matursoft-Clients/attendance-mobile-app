@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { useIsFocused } from "@react-navigation/native";
 import VersionCheck from 'react-native-version-check';
+import DeviceInfo from 'react-native-device-info';
 
 function LoginScreen({ navigation, route }) {
     const [email, setEmail] = useState('')
@@ -97,59 +98,63 @@ function LoginScreen({ navigation, route }) {
     }
 
     const doLogin = () => {
-        setSpinnerShow(true);
+        DeviceInfo.getUniqueId().then((uniqueId) => {
+            setSpinnerShow(true);
 
-        axios.post(`${API_URL}/employee/login`, {
-            email: email,
-            password: password
-        }).then(async (res) => {
-            setSpinnerShow(false);
+            axios.post(`${API_URL}/employee/login`, {
+                device_name: DeviceInfo.getDeviceNameSync(),
+                device_id: uniqueId,
+                email: email,
+                password: password
+            }).then(async (res) => {
+                setSpinnerShow(false);
 
-            try {
-                await AsyncStorage.setItem('api_token', res.data.data.token)
+                try {
+                    await AsyncStorage.setItem('api_token', res.data.data.token)
 
-                toast.show(res.data.msg, {
-                    type: 'success',
-                    placement: 'center'
-                })
-                setTimeout(() => {
-                    navigation.navigate('AppMenu', {
-                        screen: 'HomeScreen'
+                    toast.show(res.data.msg, {
+                        type: 'success',
+                        placement: 'center'
                     })
-                }, 500);
-            } catch (error) {
-                toast.show('Unhandled error, please contact administrator for report', {
-                    type: 'danger',
-                    placement: 'center'
-                })
-            }
-        }).catch((err) => {
-            setSpinnerShow(false);
-            if (err.response.status == 422) {
-                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
-                    type: 'danger',
-                    placement: 'center'
-                })
-            } else if (err.response.status == 498) {
-                toast.show(err.response.data.msg, {
-                    type: 'danger',
-                    placement: 'center'
-                })
+                    setTimeout(() => {
+                        navigation.navigate('AppMenu', {
+                            screen: 'HomeScreen'
+                        })
+                    }, 500);
+                } catch (error) {
+                    toast.show('Unhandled error, please contact administrator for report', {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                }
+            }).catch((err) => {
+                setSpinnerShow(false);
+                if (err.response.status == 422) {
+                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                } else if (err.response.status == 498) {
+                    toast.show(err.response.data.msg, {
+                        type: 'danger',
+                        placement: 'center'
+                    })
 
-                navigation.navigate('LoginScreen')
-            } else if (err.response.status == 406) {
-                toast.show(err.response.data.msg, {
-                    type: 'danger',
-                    placement: 'center'
-                })
+                    navigation.navigate('LoginScreen')
+                } else if (err.response.status == 406) {
+                    toast.show(err.response.data.msg, {
+                        type: 'danger',
+                        placement: 'center'
+                    })
 
-                navigation.navigate('LoginScreen')
-            } else {
-                toast.show('Unhandled error, please contact administrator for report', {
-                    type: 'danger',
-                    placement: 'center'
-                })
-            }
+                    navigation.navigate('LoginScreen')
+                } else {
+                    toast.show('Unhandled error, please contact administrator for report', {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                }
+            })
         })
     }
 
@@ -223,7 +228,7 @@ function LoginScreen({ navigation, route }) {
                                     </View>
                                     <Input
                                         style={{ marginTop: 30 }}
-                                        label={evaProps => <Text {...evaProps}>Email</Text>}
+                                        label={evaProps => <Text {...evaProps}>Email/NRP</Text>}
                                         placeholder="Email"
                                         value={email}
                                         onChangeText={(val) => {

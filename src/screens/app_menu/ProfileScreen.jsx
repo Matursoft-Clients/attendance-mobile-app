@@ -346,6 +346,11 @@ function ProfileScreen({ navigation }) {
                                 >
                                     {user.name}
                                 </Text>
+                                <Text
+                                    style={[GlobalStyle.initialFont, { textAlign: 'center', fontSize: 14 }]}
+                                >
+                                    {user.nrp}
+                                </Text>
                                 <View
                                     style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 7, gap: 5 }}
                                 >
