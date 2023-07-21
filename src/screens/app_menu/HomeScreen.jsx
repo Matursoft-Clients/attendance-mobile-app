@@ -378,8 +378,8 @@ function HomeScreen({ navigation }) {
             >
                 <Image
                     source={{ uri: settings.office_logo }}
-                    width={30}
-                    height={30}
+                    width={35}
+                    height={35}
                     borderRadius={15}
                 />
                 <Text
