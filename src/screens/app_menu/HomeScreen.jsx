@@ -50,26 +50,23 @@ function HomeScreen({ navigation }) {
                     let bgColor = '#FFFFFF'
                     let borderColor = '#FFFFFF'
 
-                    if (dateRes.absen.presence_entry_status == 'on_time' && !dateRes.absen.presence_exit_status) {
+                    if (dateRes.absen.presence_entry_status == 'on_time') {
                         bgColor = AppUtil.success
-                        borderColor = AppUtil.graySoft
-                    } else if (dateRes.absen.presence_entry_status == 'on_time' && dateRes.absen.presence_exit_status == 'early') {
-                        bgColor = AppUtil.success
-                        borderColor = AppUtil.dangerSoft
-                    } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status == 'early') {
+                    } else if (dateRes.absen.presence_entry_status == 'late') {
                         bgColor = AppUtil.dangerDark
-                        borderColor = AppUtil.dangerSoft
-                    } else if (dateRes.absen.presence_entry_status == 'late' && dateRes.absen.presence_exit_status) {
-                        bgColor = AppUtil.dangerDark
-                        borderColor = AppUtil.success
-                    } else if (dateRes.absen.presence_entry_status == 'late' && !dateRes.absen.presence_exit_status) {
-                        bgColor = AppUtil.dangerDark
-                        borderColor = AppUtil.graySoft
-                    } else if (dateRes.absen.presence_entry_status == 'on_time' && dateRes.absen.presence_exit_status == 'on_time') {
-                        bgColor = AppUtil.success
-                        borderColor = AppUtil.success
                     } else if (dateRes.absen.presence_entry_status == 'not_present') {
                         bgColor = '#FFFFFF'
+                    } else if (dateRes.absen.presence_entry_status == 'not_valid') {
+                        bgColor = '#000000'
+                    }
+
+                    if (!dateRes.absen.presence_exit_status) {
+                        borderColor = AppUtil.graySoft
+                    } else if (dateRes.absen.presence_exit_status == 'early') {
+                        borderColor = AppUtil.dangerSoft
+                    } else if (dateRes.absen.presence_exit_status == 'on_time') {
+                        borderColor = AppUtil.success
+                    } else if (dateRes.absen.presence_exit_status == 'not_present') {
                         borderColor = '#FFFFFF'
                     }
 
