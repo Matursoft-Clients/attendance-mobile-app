@@ -25,6 +25,7 @@ function HomeScreen({ navigation }) {
     const [calendars, setCalendars] = useState({})
     const [calendarsRes, setCalendarsRes] = useState([])
     const [dataModalAbsen, setDataModalAbsen] = useState({})
+    const [dailyAttendance, setDailyAttendance] = useState({})
 
     const toast = useToast()
 
@@ -34,6 +35,7 @@ function HomeScreen({ navigation }) {
         loadApiSholat()
         loadUserData()
         loadSettings()
+        loadDailyAttendance()
     }, [])
 
     const loadCalendars = async () => {
@@ -253,10 +255,9 @@ function HomeScreen({ navigation }) {
 
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
-        let currHoursMinutes = `${currHours}:${currMinutes}:00`;
         let status = ''
 
-        if (currHoursMinutes > settings.presence_entry_end) {
+        if (dailyAttendance.status) {
             status = 'Pulang';
         } else {
             status = 'Masuk';
@@ -275,7 +276,50 @@ function HomeScreen({ navigation }) {
                 >Absensi {status}</Text>
             </TouchableHighlight>
         )
-    }, [settings])
+    }, [dailyAttendance])
+
+    const loadDailyAttendance = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+        const dateObj = new Date()
+
+        const date = dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()
+        const month = dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() : `0` + (dateObj.getMonth() + 1)
+        const year = dateObj.getFullYear()
+
+        axios.get(`${API_URL}/daily-attendances?date=${year}-${month}-${date}`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setDailyAttendance(res.data.data.attendance)
+        }).catch((err) => {
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     const _renderStatusAbsensi = useMemo(() => {
         const dateObj = new Date()
@@ -283,20 +327,39 @@ function HomeScreen({ navigation }) {
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
 
-        if (currHoursMinutes > settings.presence_entry_end) {
+        if (dailyAttendance.status == false && currHoursMinutes < settings.presence_entry_start) {
+            return (
+                <Text
+                    style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
+                >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
+            )
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_exit) {
+            return (
+                <Text
+                    style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
+                >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
+            )
+        } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_entry_start) {
+            return (
+                <Text
+                    style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
+                >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
+            )
+        } else if (dailyAttendance.status == true && !dailyAttendance.presence_exit_status && currHoursMinutes >= settings.presence_exit) {
             return (
                 <Text
                     style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
                 >Absensi Pulang : {settings.presence_exit ? settings.presence_exit.slice(0, -3) : ''}</Text>
             )
-        } else {
+        } else if (dailyAttendance.status == true && dailyAttendance.presence_exit_status) {
             return (
                 <Text
                     style={[GlobalStyle.initialFont, { color: 'white', fontSize: 12 }]}
                 >Absensi Masuk : {settings.presence_entry_start ? settings.presence_entry_start.slice(0, -3) : ''} - {settings.presence_entry_end ? settings.presence_entry_end.slice(0, -3) : ''}</Text>
             )
         }
-    }, [settings])
+
+    }, [dailyAttendance])
 
     const loadBanners = async () => {
         const token = await AsyncStorage.getItem('api_token')
