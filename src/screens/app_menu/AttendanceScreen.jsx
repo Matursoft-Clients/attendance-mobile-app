@@ -5,7 +5,7 @@ import GlobalStyle from "../../utils/GlobalStyle";
 import { PermissionsAndroid, SafeAreaView, ScrollView, View } from "react-native";
 import Ionicon from 'react-native-vector-icons/Ionicons'
 import Leaflet, { Markers, TileOptions } from 'react-native-leaflet-ts';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications";
@@ -565,6 +565,22 @@ function AttendanceScreen() {
         },
     ];
 
+    const _renderMap = useMemo(() => {
+        return (
+            <Leaflet
+                mapLayers={mapLayers}
+                minZoom={1}
+                zoom={2}
+                maxZoom={20}
+                flyTo={{
+                    latLng: [latitude, longitude],
+                    zoom: 19,
+                }}
+                markers={markerList}
+            />
+        )
+    }, [radius])
+
     return (
         <SafeAreaView
             style={{ height: '100%', backgroundColor: 'white' }}
@@ -580,17 +596,7 @@ function AttendanceScreen() {
                 >
                     {
                         mapLoaded ?
-                            <Leaflet
-                                mapLayers={mapLayers}
-                                minZoom={1}
-                                zoom={2}
-                                maxZoom={20}
-                                flyTo={{
-                                    latLng: [latitude, longitude],
-                                    zoom: 19,
-                                }}
-                                markers={markerList}
-                            /> : <></>
+                            _renderMap : <></>
                     }
                 </View>
                 <ContainerComponent>

@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useToast } from "react-native-toast-notifications"
 import { useFocusEffect } from "@react-navigation/native"
 import { launchImageLibrary } from 'react-native-image-picker';
+import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
 
 function ProfileScreen({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false)
@@ -19,6 +20,8 @@ function ProfileScreen({ navigation }) {
     const toast = useToast()
     const [errorMessage, setErrorMessage] = useState(null)
     const [refresh, setRefersh] = useState(false)
+
+    const [spinnerShow, setSpinnerShow] = useState(false)
 
     const [name, setName] = useState('')
     const [whatsappNumber, setWhatsappNumber] = useState('')
@@ -67,6 +70,8 @@ function ProfileScreen({ navigation }) {
     );
 
     const doUpdateUserData = async () => {
+        setSpinnerShow(true)
+
         setErrorMessage(null)
         const token = await AsyncStorage.getItem('api_token')
         var formData = new FormData();
@@ -89,6 +94,8 @@ function ProfileScreen({ navigation }) {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
+            setSpinnerShow(false)
+
             toast.show(res.data.msg, {
                 type: 'success',
                 placement: 'center'
@@ -98,7 +105,7 @@ function ProfileScreen({ navigation }) {
             setPasswordConfirmation('')
             loadUserData()
         }).catch((err) => {
-            console.log(err.response)
+
             if (err.response.status == 422) {
                 setErrorMessage(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''))
             } else if (err.response.status == 498) {
@@ -174,6 +181,10 @@ function ProfileScreen({ navigation }) {
                 <View
                     style={{ height: Dimensions.get('window').height, backgroundColor: 'white' }}
                 >
+                    {
+                        spinnerShow ? <LoadingSpinnerComponent /> : <></>
+                    }
+
                     <Modal
                         transparent={true}
                         animationType="slide"
