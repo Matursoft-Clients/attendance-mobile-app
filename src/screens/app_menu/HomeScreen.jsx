@@ -1,7 +1,7 @@
 import { Button, Divider, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
 import Carousel from 'react-native-snap-carousel';
-import { Alert, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableHighlight, TouchableOpacity, View } from "react-native";
+import { Alert, BackHandler, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, TouchableHighlight, View } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar } from 'react-native-calendars';
 import GlobalStyle from "../../utils/GlobalStyle";
@@ -36,11 +36,15 @@ function HomeScreen({ navigation }) {
         loadUserData()
         loadSettings()
         loadDailyAttendance()
+
+        BackHandler.addEventListener('hardwareBackPress', function () { return true })
     }, [])
+
+
 
     const loadCalendars = async () => {
         const token = await AsyncStorage.getItem('api_token')
-        console.log(token)
+
         axios.get(`${API_URL}/calendar?date=${DateUtil.getCurrentYear()}-${DateUtil.getCurrentMonth()}`, {
             headers: {
                 Authorization: 'Bearer ' + token
@@ -91,7 +95,6 @@ function HomeScreen({ navigation }) {
             });
             setCalendars(dataCalendarObj)
         }).catch((err) => {
-            console.log(err.response)
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
                     type: 'danger',

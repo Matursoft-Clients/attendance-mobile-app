@@ -17,6 +17,7 @@ import ResetPasswordScreen from './src/screens/auth/ResetPasswordScreen';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from './src/screens/app_menu/HomeScreen';
 import ProfileScreen from './src/screens/app_menu/ProfileScreen';
+import EditProfileScreen from './src/screens/app_menu/EditProfileScreen';
 import AnnouncementScreen from './src/screens/app_menu/AnnouncementScreen';
 import AttendanceScreen from './src/screens/app_menu/AttendanceScreen';
 import AnnouncementDetailScreen from './src/screens/app_menu/AnnouncementDetailScreen';
@@ -35,6 +36,15 @@ function AnnouncementScreenWrapper() {
         <Stack.Navigator>
             <Stack.Screen name="AnnouncementScreen" component={AnnouncementScreen} options={{ headerShown: false }} />
             <Stack.Screen name="AnnouncementDetailScreen" component={AnnouncementDetailScreen} options={{ headerShown: false }} />
+        </Stack.Navigator>
+    )
+}
+
+function ProfileScreenWrapper() {
+    return (
+        <Stack.Navigator>
+            <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
     )
 }
@@ -69,7 +79,7 @@ function AppMenu() {
                 tabBarLabel: 'Pengumuman',
                 tabBarStyle: { height: 60, paddingTop: 10, paddingBottom: 10 },
             }} />
-            <Tab.Screen name="ProfileScreen" component={ProfileScreen} options={{
+            <Tab.Screen name="ProfileScreenWrapper" component={ProfileScreenWrapper} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
                     <MaterialCommunityIcon name="account" size={18} color={focused ? AppUtil.primary : AppUtil.gray} />

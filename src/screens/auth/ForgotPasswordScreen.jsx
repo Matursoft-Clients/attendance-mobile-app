@@ -1,14 +1,12 @@
-import { Avatar, Button, Input, Text } from "@ui-kitten/components";
-import { ActivityIndicator, ImageComponent, View } from "react-native";
+import { Button, Input, Text } from "@ui-kitten/components";
+import { View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
-import { Colors, Image } from "react-native-ui-lib";
 import AppUtil from "../../utils/AppUtil";
 import GlobalStyle from "../../utils/GlobalStyle";
 import axios from "axios";
 import { useState } from "react";
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications";
-import ErrResponseHandler from "../../utils/ErrResponseHandler";
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 
 function ForgotPasswordScreen({ navigation }) {
@@ -18,7 +16,6 @@ function ForgotPasswordScreen({ navigation }) {
     const toast = useToast()
 
     const doSendForgotPasswordEmail = () => {
-        console.log('test')
         setSpinnerShow(true);
 
         axios.post(`${API_URL}/employee/forgot-password`, {

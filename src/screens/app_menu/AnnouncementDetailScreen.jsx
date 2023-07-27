@@ -1,4 +1,4 @@
-import { Button, Card, Text } from "@ui-kitten/components"
+import { Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
 import { Dimensions, Image, Linking, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -42,7 +42,7 @@ function AnnouncementDetailScreen({ route }) {
 
     const loadAnnouncementDetail = async (slug) => {
         const token = await AsyncStorage.getItem('api_token')
-        console.log(token)
+
 
         axios.get(`${API_URL}/announcements/${slug}`, {
             headers: {

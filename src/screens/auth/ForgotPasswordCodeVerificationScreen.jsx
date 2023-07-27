@@ -1,5 +1,5 @@
-import { Avatar, Button, Input, Text } from "@ui-kitten/components";
-import { ImageComponent, View } from "react-native";
+import { Button, Input, Text } from "@ui-kitten/components";
+import { View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
 import GlobalStyle from "../../utils/GlobalStyle";
 import AppUtil from "../../utils/AppUtil";
@@ -16,7 +16,6 @@ function ForgotPasswordCodeVerificationScreen({ navigation, route }) {
     const [spinnerShow, setSpinnerShow] = useState(false)
 
     useEffect(() => {
-        console.log('start')
         setEmail(route.params.email)
     }, [])
 

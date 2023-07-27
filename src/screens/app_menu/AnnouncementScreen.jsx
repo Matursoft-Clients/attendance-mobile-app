@@ -3,7 +3,7 @@ import ContainerComponent from "../../components/ContainerComponent"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { API_URL } from "@env"
@@ -30,7 +30,7 @@ function AnnouncementScreen({ navigation }) {
     const loadAnnouncements = async (url = null, cb) => {
         setSpinnerShow(true);
         const token = await AsyncStorage.getItem('api_token')
-        console.log(token)
+
 
         axios.get(url ? url : `${API_URL}/announcements`, {
             headers: {

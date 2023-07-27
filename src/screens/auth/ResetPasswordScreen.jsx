@@ -1,8 +1,6 @@
-import { Avatar, Button, Input, Text } from "@ui-kitten/components";
-import { BackHandler, ImageComponent, TextInput, View } from "react-native";
+import { Button, Input, Text } from "@ui-kitten/components";
+import { BackHandler, View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
-import { Colors, Image } from "react-native-ui-lib";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import GlobalStyle from "../../utils/GlobalStyle";
 import AppUtil from "../../utils/AppUtil";
 import React, { useEffect, useState } from "react";
@@ -35,7 +33,6 @@ function ResetPasswordScreen({ navigation, route }) {
     );
 
     useEffect(() => {
-        console.log('start')
         setEmail(route.params.email)
         setToken(route.params.token)
     }, [])

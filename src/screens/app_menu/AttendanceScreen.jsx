@@ -2,7 +2,7 @@ import { Button, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent";
 import AppUtil from "../../utils/AppUtil";
 import GlobalStyle from "../../utils/GlobalStyle";
-import { PermissionsAndroid, SafeAreaView, ScrollView, View } from "react-native";
+import { PermissionsAndroid, SafeAreaView, View } from "react-native";
 import Ionicon from 'react-native-vector-icons/Ionicons'
 import Leaflet, { Markers, TileOptions } from 'react-native-leaflet-ts';
 import { useEffect, useMemo, useState } from "react";
@@ -14,7 +14,7 @@ import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 import Geolocation from 'react-native-geolocation-service';
 import NetInfo from "@react-native-community/netinfo";
 import haversine from 'haversine-distance'
-import { PERMISSIONS, check, checkMultiple } from "react-native-permissions";
+import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 
 function AttendanceScreen() {
     const [latitude, setLatitude] = useState('')
@@ -56,9 +56,9 @@ function AttendanceScreen() {
                 },
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('You can use the location');
+                // console.log('You can use the location');
             } else {
-                console.log('Location permission denied');
+                // console.log('Location permission denied');
             }
         } catch (err) {
             console.warn(err);
@@ -365,8 +365,6 @@ function AttendanceScreen() {
                                 }
                             },
                             (error) => {
-                                // See error code charts below.
-                                console.log(error.code, error.message);
                             },
                             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
                         );
@@ -374,15 +372,13 @@ function AttendanceScreen() {
                 })
             }
         })
-
-
     }
 
     const _renderTombolAbsensi = () => {
         let text;
 
         const dateObj = new Date()
-        dateObj.setHours(7)
+
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
         let currHoursMinutes = `${currHours}:${currMinutes}:00`;
@@ -421,7 +417,6 @@ function AttendanceScreen() {
     const _renderStatusLabel = () => {
 
         const dateObj = new Date()
-        dateObj.setHours(7)
 
         let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
         let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
@@ -430,7 +425,10 @@ function AttendanceScreen() {
         let displayText;
         let bgColor;
 
-        if (dailyAttendance.status == false && currHoursMinutes < settings.presence_entry_start) {
+        if (dailyAttendance.status == true && currHoursMinutes > settings.presence_entry_start && currHoursMinutes < settings.presence_exit && !dailyAttendance.presence_exit_status) {
+            bgColor = AppUtil.success
+            displayText = 'Anda Sudah Melakukan Absensi Masuk'
+        } else if (dailyAttendance.status == false && currHoursMinutes < settings.presence_entry_start) {
             bgColor = AppUtil.warning
             displayText = 'Absensi Belum dibuka'
         } else if (dailyAttendance.status == false && currHoursMinutes >= settings.presence_exit) {
@@ -461,7 +459,7 @@ function AttendanceScreen() {
 
     const loadSettings = async () => {
         const token = await AsyncStorage.getItem('api_token')
-        console.log(token)
+
 
         axios.get(`${API_URL}/custom-attendance-locations`, {
             headers: {
