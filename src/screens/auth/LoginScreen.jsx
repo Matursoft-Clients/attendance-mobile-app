@@ -29,10 +29,6 @@ function LoginScreen({ navigation, route }) {
     useEffect(() => {
         SplashScreen.hide()
         checkLogin()
-
-        BackHandler.addEventListener('hardwareBackPress', function () {
-            BackHandler.exitApp()
-        });
     }, [])
 
     useEffect(() => {
@@ -43,9 +39,11 @@ function LoginScreen({ navigation, route }) {
             }
         }
 
-        BackHandler.addEventListener('hardwareBackPress', function () {
-            BackHandler.exitApp()
-        });
+        if (isFocused) {
+            BackHandler.addEventListener('hardwareBackPress', function () {
+                BackHandler.exitApp()
+            });
+        }
     }, [isFocused])
 
     const checkLogin = async () => {

@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useToast } from "react-native-toast-notifications"
 import { launchImageLibrary } from 'react-native-image-picker';
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
+import { useIsFocused } from "@react-navigation/native"
 
 function EditProfileScreen({ navigation, route }) {
     const [user, setUser] = useState({})
@@ -23,19 +24,27 @@ function EditProfileScreen({ navigation, route }) {
     const [password, setPassword] = useState('')
     const [passwordConfirmation, setPasswordConfirmation] = useState('')
 
+    const isFocused = useIsFocused()
+
+    useEffect(() => {
+        if (isFocused) {
+            BackHandler.addEventListener('hardwareBackPress', function () {
+                navigation.navigate('AppMenu', {
+                    screen: 'ProfileScreenWrapper', params: {
+                        screen: 'ProfileScreen',
+                        params: {
+                            reload: true
+                        }
+                    }
+                })
+            })
+        }
+    }, [isFocused])
+
     useEffect(() => {
         setUser(route.params.user)
 
-        BackHandler.addEventListener('hardwareBackPress', function () {
-            navigation.navigate('AppMenu', {
-                screen: 'ProfileScreenWrapper', params: {
-                    screen: 'ProfileScreen',
-                    params: {
-                        reload: true
-                    }
-                }
-            })
-        })
+
     }, [])
 
     const openGalleryToSelectFile = () => {
