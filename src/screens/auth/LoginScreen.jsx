@@ -1,5 +1,5 @@
 import { Button, Input, Text } from "@ui-kitten/components";
-import { Dimensions, Linking, Modal, ScrollView, View } from "react-native";
+import { BackHandler, Dimensions, Linking, Modal, ScrollView, View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
 import AppUtil from "../../utils/AppUtil";
 import GlobalStyle from "../../utils/GlobalStyle";
@@ -29,6 +29,10 @@ function LoginScreen({ navigation, route }) {
     useEffect(() => {
         SplashScreen.hide()
         checkLogin()
+
+        BackHandler.addEventListener('hardwareBackPress', function () {
+            BackHandler.exitApp()
+        });
     }, [])
 
     useEffect(() => {
@@ -38,6 +42,10 @@ function LoginScreen({ navigation, route }) {
                 setCacheLoginCheck(true)
             }
         }
+
+        BackHandler.addEventListener('hardwareBackPress', function () {
+            BackHandler.exitApp()
+        });
     }, [isFocused])
 
     const checkLogin = async () => {
