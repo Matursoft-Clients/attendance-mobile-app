@@ -3,7 +3,7 @@ import ContainerComponent from "../../components/ContainerComponent"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Dimensions, Image, SafeAreaView, ScrollView, TouchableHighlight, View } from "react-native"
+import { BackHandler, Dimensions, Image, SafeAreaView, ScrollView, TouchableHighlight, View } from "react-native"
 import React, { useEffect, useState } from "react"
 import axios from "axios"
 import { API_URL } from "@env"
@@ -25,6 +25,17 @@ function EditProfileScreen({ navigation, route }) {
 
     useEffect(() => {
         setUser(route.params.user)
+
+        BackHandler.addEventListener('hardwareBackPress', function () {
+            navigation.navigate('AppMenu', {
+                screen: 'ProfileScreenWrapper', params: {
+                    screen: 'ProfileScreen',
+                    params: {
+                        reload: true
+                    }
+                }
+            })
+        })
     }, [])
 
     const openGalleryToSelectFile = () => {
