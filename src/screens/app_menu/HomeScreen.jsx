@@ -12,6 +12,7 @@ import axios from "axios";
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications";
 import DateUtil from "../../utils/DateUtil";
+import FuncUtil from "../../utils/FuncUtil";
 
 function HomeScreen({ navigation }) {
 
@@ -26,21 +27,23 @@ function HomeScreen({ navigation }) {
     const [calendarsRes, setCalendarsRes] = useState([])
     const [dataModalAbsen, setDataModalAbsen] = useState({})
     const [dailyAttendance, setDailyAttendance] = useState({})
+    const [city, setCity] = useState({})
 
     const toast = useToast()
 
     useEffect(() => {
+        loadUserData()
         loadCalendars()
         loadBanners()
-        loadApiSholat()
-        loadUserData()
         loadSettings()
         loadDailyAttendance()
 
         BackHandler.addEventListener('hardwareBackPress', function () { return true })
     }, [])
 
-
+    useEffect(() => {
+        loadApiSholat()
+    }, [city])
 
     const loadCalendars = async () => {
         const token = await AsyncStorage.getItem('api_token')
@@ -125,16 +128,16 @@ function HomeScreen({ navigation }) {
 
     const loadApiSholat = () => {
         const dateObj = new Date()
-
-        axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${dateObj.getFullYear()}/${dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() + 1 : `0` + (dateObj.getMonth() + 1)}/${dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()}`)
+        axios.get(`https://api.myquran.com/v1/sholat/jadwal/${city.code}/${dateObj.getFullYear()}/${dateObj.getMonth() + 1 > 9 ? dateObj.getMonth() + 1 : `0` + (dateObj.getMonth() + 1)}/${dateObj.getDate() > 9 ? dateObj.getDate() : `0` + dateObj.getDate()}`)
             .then((res) => {
                 const jadwalSholat = res.data.data.jadwal
-
+                console.log(res.data.data.jadwal)
                 const dateObj = new Date()
 
                 let currHours = dateObj.getHours() > 9 ? dateObj.getHours() : ('0' + dateObj.getHours())
                 let currMinutes = dateObj.getMinutes() > 9 ? dateObj.getMinutes() : ('0' + dateObj.getMinutes())
                 let currHoursMinutes = `${currHours}:${currMinutes}`;
+
                 let a = null;
                 let b = null;
 
@@ -156,7 +159,7 @@ function HomeScreen({ navigation }) {
                     const newDateObj = new Date()
                     newDateObj.setDate(newDateObj.getDate() + 1)
 
-                    axios.get(`https://api.myquran.com/v1/sholat/jadwal/1407/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
+                    axios.get(`https://api.myquran.com/v1/sholat/jadwal/${city.code}/${newDateObj.getFullYear()}/${newDateObj.getMonth() + 1 > 9 ? newDateObj.getMonth() + 1 : `0` + (newDateObj.getMonth() + 1)}/${newDateObj.getDate() > 9 ? newDateObj.getDate() : `0` + newDateObj.getDate()}`)
                         .then((res) => {
                             const jadwal = res.data.data.jadwal;
 
@@ -214,6 +217,7 @@ function HomeScreen({ navigation }) {
             }
         }).then(async (res) => {
             setUser(res.data.data)
+            setCity(res.data.data.branch.city)
         }).catch((err) => {
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
@@ -487,7 +491,6 @@ function HomeScreen({ navigation }) {
 
                             loadCalendars()
                             loadBanners()
-                            loadApiSholat()
                             loadUserData()
                             loadSettings()
                             setRefersh(false)
@@ -585,7 +588,7 @@ function HomeScreen({ navigation }) {
                                 >
                                     <Text
                                         style={[GlobalStyle.initialFont, { fontSize: 15 }]}
-                                    >Kabupaten Cilacap, {currSholat}</Text>
+                                    >{city.name ? city.name.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letter => letter.toUpperCase()) : '-'}, {currSholat}</Text>
                                     <Text
                                         style={[GlobalStyle.initialFont, { fontSize: 15, fontWeight: 700, color: AppUtil.primary }]}> {currWaktuSholat}</Text>
                                 </View>
