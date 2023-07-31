@@ -7,7 +7,7 @@
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import { ApplicationProvider } from '@ui-kitten/components';
 import * as eva from '@eva-design/eva';
@@ -27,6 +27,9 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AppUtil from './src/utils/AppUtil';
 import { ToastProvider } from 'react-native-toast-notifications';
+import { Text, View } from 'react-native';
+import GlobalStyle from './src/utils/GlobalStyle';
+import { AnnouncementContext } from './src/context/AnnouncementContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -50,6 +53,8 @@ function ProfileScreenWrapper() {
 }
 
 function AppMenu() {
+    const { amountNotifAnnouncements } = useContext(AnnouncementContext)
+
     return (
         <Tab.Navigator>
             <Tab.Screen name="HomeScreen" component={HomeScreen} options={{
@@ -73,7 +78,15 @@ function AppMenu() {
             <Tab.Screen name="AnnouncementScreenWrapper" component={AnnouncementScreenWrapper} options={{
                 headerShown: false,
                 tabBarIcon: ({ color, tintColor, focused }) => (
-                    <FontAwesome5 name="bullhorn" size={18} color={focused ? AppUtil.primary : AppUtil.gray} />
+                    <View>
+                        <FontAwesome5 name="bullhorn" size={18} color={focused ? AppUtil.primary : AppUtil.gray} />
+                        {
+                            amountNotifAnnouncements > 0 ?
+                                <View style={{ width: 18, height: 18, backgroundColor: AppUtil.dangerDark, position: 'absolute', borderRadius: 9, justifyContent: 'center', alignItems: 'center', right: -5, top: -5 }}>
+                                    <Text style={[GlobalStyle.initialFont, { color: 'white', fontSize: 10, fontWeight: '700' }]}>{amountNotifAnnouncements}</Text>
+                                </View> : <></>
+                        }
+                    </View>
                 ),
                 tabBarInactiveTintColor: AppUtil.gray,
                 tabBarLabel: 'Pengumuman',
@@ -94,6 +107,8 @@ function AppMenu() {
 
 
 function App() {
+    const [amountNotifAnnouncements, setAmountNotifAnnouncements] = useState(0)
+
     return (
         <ToastProvider
             duration={4000}
@@ -101,15 +116,18 @@ function App() {
             dangerIcon={<AntDesign name={'exclamationcircle'} color={'white'} />}
         >
             <ApplicationProvider {...eva} theme={eva.light}>
-                <NavigationContainer>
-                    <Stack.Navigator>
-                        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-                        <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }} />
-                        <Stack.Screen name="ForgotPasswordCodeVerificationScreen" component={ForgotPasswordCodeVerificationScreen} options={{ headerShown: false }} />
-                        <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} options={{ headerShown: false }} />
-                        <Stack.Screen name="AppMenu" component={AppMenu} options={{ headerShown: false }} />
-                    </Stack.Navigator>
-                </NavigationContainer>
+                <AnnouncementContext.Provider value={{ amountNotifAnnouncements, setAmountNotifAnnouncements }}>
+                    <NavigationContainer>
+                        <Stack.Navigator>
+                            <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="ForgotPasswordCodeVerificationScreen" component={ForgotPasswordCodeVerificationScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} options={{ headerShown: false }} />
+                            <Stack.Screen name="AppMenu" component={AppMenu} options={{ headerShown: false }} />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                </AnnouncementContext.Provider>
+
             </ApplicationProvider>
         </ToastProvider>
     );

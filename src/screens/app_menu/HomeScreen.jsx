@@ -2,7 +2,7 @@ import { Button, Divider, Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
 import Carousel from 'react-native-snap-carousel';
 import { Alert, BackHandler, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, TouchableHighlight, View } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Calendar } from 'react-native-calendars';
 import GlobalStyle from "../../utils/GlobalStyle";
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -13,6 +13,7 @@ import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications";
 import DateUtil from "../../utils/DateUtil";
 import FuncUtil from "../../utils/FuncUtil";
+import { AnnouncementContext } from "../../context/AnnouncementContext";
 
 function HomeScreen({ navigation }) {
 
@@ -29,6 +30,8 @@ function HomeScreen({ navigation }) {
     const [dailyAttendance, setDailyAttendance] = useState({})
     const [city, setCity] = useState({})
 
+    const { setAmountNotifAnnouncements } = useContext(AnnouncementContext)
+
     const toast = useToast()
 
     useEffect(() => {
@@ -37,6 +40,7 @@ function HomeScreen({ navigation }) {
         loadBanners()
         loadSettings()
         loadDailyAttendance()
+        loadAmountNotReadNotif()
 
         BackHandler.addEventListener('hardwareBackPress', function () { return true })
     }, [])
@@ -44,6 +48,44 @@ function HomeScreen({ navigation }) {
     useEffect(() => {
         loadApiSholat()
     }, [city])
+
+    const loadAmountNotReadNotif = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+
+        axios.get(`${API_URL}/announcements/amount-announcement-notifications`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setAmountNotifAnnouncements(res.data.data.amount_announcement_notifications)
+        }).catch((err) => {
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     const loadCalendars = async () => {
         const token = await AsyncStorage.getItem('api_token')

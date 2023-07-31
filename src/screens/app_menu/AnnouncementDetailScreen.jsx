@@ -1,22 +1,26 @@
 import { Text } from "@ui-kitten/components"
 import ContainerComponent from "../../components/ContainerComponent"
-import { Dimensions, Image, Linking, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
+import { BackHandler, Dimensions, Image, Linking, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import AppUtil from "../../utils/AppUtil"
 import GlobalStyle from "../../utils/GlobalStyle"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { useToast } from "react-native-toast-notifications"
 import { API_URL } from "@env"
 import FastImage from "react-native-fast-image"
 import AutoHeightWebView from "react-native-autoheight-webview-fix"
+import { useIsFocused } from "@react-navigation/native"
+import { AnnouncementContext } from "../../context/AnnouncementContext"
 
-function AnnouncementDetailScreen({ route }) {
+function AnnouncementDetailScreen({ navigation, route }) {
     const [announcement, setAnnouncement] = useState('')
     const [refresh, setRefersh] = useState(false)
     const [imageWidth, setImageWidth] = useState(0)
     const [imageHeight, setImageHeight] = useState(0)
+    const isFocused = useIsFocused()
+    const { setAmountNotifAnnouncements } = useContext(AnnouncementContext)
 
     useEffect(() => {
         loadAnnouncementDetail(route.params.slug)
@@ -29,6 +33,21 @@ function AnnouncementDetailScreen({ route }) {
         })
     }, [announcement])
 
+    useEffect(() => {
+        if (isFocused) {
+            BackHandler.addEventListener('hardwareBackPress', function () {
+                navigation.navigate('AppMenu', {
+                    screen: 'AnnouncementScreenWrapper', params: {
+                        screen: 'AnnouncementScreen',
+                        params: {
+                            reload: true
+                        }
+                    }
+                })
+            })
+        }
+    }, [isFocused])
+
     const getImageSize = new Promise(
         (resolve, reject) => {
             Image.getSize(announcement.thumbnail, (width, height) => {
@@ -40,6 +59,44 @@ function AnnouncementDetailScreen({ route }) {
 
     const toast = useToast()
 
+    const loadAmountNotReadNotif = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+
+        axios.get(`${API_URL}/announcements/amount-announcement-notifications`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setAmountNotifAnnouncements(res.data.data.amount_announcement_notifications)
+        }).catch((err) => {
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
+
     const loadAnnouncementDetail = async (slug) => {
         const token = await AsyncStorage.getItem('api_token')
 
@@ -50,6 +107,43 @@ function AnnouncementDetailScreen({ route }) {
             }
         }).then(async (res) => {
             setAnnouncement(res.data.data)
+
+            if (res.data.data.not_read) {
+                axios.delete(`${API_URL}/announcements/${res.data.data.uuid}`, {
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    }
+                }).then(async (res) => {
+                    loadAmountNotReadNotif()
+                }).catch((err) => {
+                    if (err.response.status == 422) {
+                        toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                            type: 'danger',
+                            placement: 'center'
+                        })
+                    } else if (err.response.status == 498) {
+                        toast.show(err.response.data.msg, {
+                            type: 'danger',
+                            placement: 'center'
+                        })
+
+                        navigation.navigate('LoginScreen')
+                    } else if (err.response.status == 406) {
+                        toast.show(err.response.data.msg, {
+                            type: 'danger',
+                            placement: 'center'
+                        })
+
+                        navigation.navigate('LoginScreen')
+                    } else {
+                        toast.show('Unhandled error, please contact administrator for report', {
+                            type: 'danger',
+                            placement: 'center'
+                        })
+                    }
+                })
+            }
+
         }).catch((err) => {
             if (err.response.status == 422) {
                 toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {

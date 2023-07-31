@@ -43,8 +43,6 @@ function EditProfileScreen({ navigation, route }) {
 
     useEffect(() => {
         setUser(route.params.user)
-
-
     }, [])
 
     const openGalleryToSelectFile = () => {

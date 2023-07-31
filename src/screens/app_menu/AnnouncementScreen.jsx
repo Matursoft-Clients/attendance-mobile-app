@@ -3,7 +3,7 @@ import ContainerComponent from "../../components/ContainerComponent"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { API_URL } from "@env"
@@ -11,6 +11,8 @@ import { useToast } from "react-native-toast-notifications"
 import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
 import FastImage from "react-native-fast-image"
+import { AnnouncementContext } from "../../context/AnnouncementContext"
+import { useIsFocused } from "@react-navigation/native"
 
 function AnnouncementScreen({ navigation }) {
 
@@ -20,17 +22,57 @@ function AnnouncementScreen({ navigation }) {
     const [ref, setRef] = useState(null)
     const [spinnerShow, setSpinnerShow] = useState(false)
     const [refresh, setRefersh] = useState(false)
+    const { setAmountNotifAnnouncements } = useContext(AnnouncementContext)
+    const isFocused = useIsFocused()
 
     const toast = useToast()
 
     useEffect(() => {
         loadAnnouncements()
-    }, [])
+        loadAmountNotReadNotif()
+    }, [isFocused])
+
+    const loadAmountNotReadNotif = async () => {
+        const token = await AsyncStorage.getItem('api_token')
+
+        axios.get(`${API_URL}/announcements/amount-announcement-notifications`, {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then(async (res) => {
+            setAmountNotifAnnouncements(res.data.data.amount_announcement_notifications)
+        }).catch((err) => {
+            if (err.response.status == 422) {
+                toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            } else if (err.response.status == 498) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else if (err.response.status == 406) {
+                toast.show(err.response.data.msg, {
+                    type: 'danger',
+                    placement: 'center'
+                })
+
+                navigation.navigate('LoginScreen')
+            } else {
+                toast.show('Unhandled error, please contact administrator for report', {
+                    type: 'danger',
+                    placement: 'center'
+                })
+            }
+        })
+    }
 
     const loadAnnouncements = async (url = null, cb) => {
         setSpinnerShow(true);
         const token = await AsyncStorage.getItem('api_token')
-
 
         axios.get(url ? url : `${API_URL}/announcements`, {
             headers: {
@@ -77,7 +119,7 @@ function AnnouncementScreen({ navigation }) {
         return announcements.map((e) => {
             return (
                 <Card
-                    style={{ marginBottom: 10, backgroundColor: 'white' }}
+                    style={{ marginBottom: 10, backgroundColor: e.not_read ? AppUtil.primarySoft : 'white' }}
                     onPress={() => {
                         navigation.navigate('AppMenu', {
                             screen: 'AnnouncementScreenWrapper', params: {
@@ -96,6 +138,12 @@ function AnnouncementScreen({ navigation }) {
                         style={{ width: '100%', height: 125, borderRadius: 5 }}
                         resizeMode={FastImage.resizeMode.cover}
                     />
+                    {
+                        e.not_read ?
+                            <Text
+                                style={[GlobalStyle.initialFont, { marginBottom: 4, marginTop: 10, backgroundColor: AppUtil.danger, color: 'white', alignSelf: 'flex-start', fontSize: 12, paddingHorizontal: 7, borderRadius: 3.5, paddingVertical: 2.5 }]}
+                            >Belum dibaca</Text> : <></>
+                    }
                     <Text
                         style={[{ fontWeight: '700', marginTop: 10, fontSize: 15 }, GlobalStyle.initialFont]}
                     >{e.title}</Text>
@@ -117,8 +165,8 @@ function AnnouncementScreen({ navigation }) {
                         refreshing={refresh}
                         onRefresh={() => {
                             setRefersh(true)
-
                             loadAnnouncements()
+                            loadAmountNotReadNotif()
                             setRefersh(false)
                         }}
                     />
