@@ -15,6 +15,8 @@ import Geolocation from 'react-native-geolocation-service';
 import NetInfo from "@react-native-community/netinfo";
 import haversine from 'haversine-distance'
 import { PERMISSIONS, checkMultiple } from "react-native-permissions";
+import { ConfirmDialog } from 'react-native-simple-dialogs';
+import { Linking } from 'react-native'
 
 function AttendanceScreen() {
     const [latitude, setLatitude] = useState('')
@@ -25,11 +27,11 @@ function AttendanceScreen() {
     const [dailyAttendance, setDailyAttendance] = useState({})
     const [settings, setSettings] = useState({})
     const [spinnerShow, setSpinnerShow] = useState(false)
+    const [dialogOpenSetting, setDialogOpenSetting] = useState(false)
 
     const toast = useToast()
 
     useEffect(() => {
-        requestCameraPermission()
         loadTanggalDanWaktuSekarang()
         loadSettings()
         loadDailyAttendance()
@@ -41,24 +43,22 @@ function AttendanceScreen() {
         loadDailyAttendance()
     }
 
-    const requestCameraPermission = async () => {
+    const requestLocationPermission = async (cb) => {
         try {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                 {
-                    title: 'Cool Photo App Camera Permission',
-                    message:
-                        'Cool Photo App needs access to your camera ' +
-                        'so you can take awesome pictures.',
-                    buttonNeutral: 'Ask Me Later',
-                    buttonNegative: 'Cancel',
-                    buttonPositive: 'OK',
+                    title: 'Izinkan akses lokasi?',
+                    message: 'Akses lokasi wajib diizinkan, guna diperlukan untuk proses absensi berdasarkan cabang kantor',
+                    buttonNeutral: 'Tanya lagi nanti',
+                    buttonNegative: 'Tolak',
+                    buttonPositive: 'Oke',
                 },
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                // console.log('You can use the location');
+                cb(true, granted)
             } else {
-                // console.log('Location permission denied');
+                cb(false, granted)
             }
         } catch (err) {
             console.warn(err);
@@ -200,86 +200,101 @@ function AttendanceScreen() {
     const doAbsenMasuk = async () => {
         setSpinnerShow(true);
 
-        checkMultiple([PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION, PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION]).then(async (res) => {
-            if (res[PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION] == 'denied' && res[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] == 'denied') {
-                setSpinnerShow(false);
-                toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
-                    type: 'danger',
-                    placement: 'center'
-                })
-            } else {
-                const token = await AsyncStorage.getItem('api_token')
-
-                NetInfo.fetch().then(state => {
-                    if (!state.isConnected) {
+        requestLocationPermission((statusPermissions, statusName) => {
+            if (statusPermissions) {
+                checkMultiple([PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION, PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION]).then(async (res) => {
+                    if (res[PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION] == 'denied' && res[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] == 'denied') {
                         setSpinnerShow(false);
-                        toast.show('Periksa koneksi internet anda untuk melakukan absensi', {
+                        toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
                             type: 'danger',
                             placement: 'center'
                         })
                     } else {
-                        Geolocation.getCurrentPosition(
-                            (position) => {
+                        const token = await AsyncStorage.getItem('api_token')
 
-                                const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
-                                const branchLocation = { latitude: latitude, longitude: longitude }
+                        NetInfo.fetch().then(state => {
+                            if (!state.isConnected) {
+                                setSpinnerShow(false);
+                                toast.show('Periksa koneksi internet anda untuk melakukan absensi', {
+                                    type: 'danger',
+                                    placement: 'center'
+                                })
+                            } else {
+                                Geolocation.getCurrentPosition(
+                                    (position) => {
 
-                                if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
-                                    setSpinnerShow(false);
+                                        const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+                                        const branchLocation = { latitude: latitude, longitude: longitude }
 
-                                    toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
-                                        type: 'danger',
-                                        placement: 'center'
-                                    })
-                                } else {
-                                    axios.post(`${API_URL}/presence/entry`, {
-                                        address: 'address',
-                                        latitude: position.coords.latitude,
-                                        longitude: position.coords.longitude,
-                                    }, {
-                                        headers: {
-                                            Authorization: 'Bearer ' + token
-                                        }
-                                    }).then(async (res) => {
-                                        setSpinnerShow(false);
-                                        toast.show(res.data.msg, {
-                                            type: 'success',
-                                            placement: 'center'
-                                        })
+                                        if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
+                                            setSpinnerShow(false);
 
-                                        reloadScreen()
-                                    }).catch((err) => {
-                                        setSpinnerShow(false);
-                                        if (err.response.status == 422) {
-                                            toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                            toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
                                                 type: 'danger',
                                                 placement: 'center'
                                             })
-                                        } else if (err.response.status == 498) {
-                                            toast.show(err.response.data.msg, {
-                                                type: 'danger',
-                                                placement: 'center'
-                                            })
-
-                                            navigation.navigate('LoginScreen')
-                                        } else if (err.response.status == 406) {
-                                            toast.show(err.response.data.msg, {
-                                                type: 'danger',
-                                                placement: 'center'
-                                            })
-
-                                            navigation.navigate('LoginScreen')
                                         } else {
-                                            toast.show('Unhandled error, please contact administrator for report', {
-                                                type: 'danger',
-                                                placement: 'center'
+                                            axios.post(`${API_URL}/presence/entry`, {
+                                                address: 'address',
+                                                latitude: position.coords.latitude,
+                                                longitude: position.coords.longitude,
+                                            }, {
+                                                headers: {
+                                                    Authorization: 'Bearer ' + token
+                                                }
+                                            }).then(async (res) => {
+                                                setSpinnerShow(false);
+                                                toast.show(res.data.msg, {
+                                                    type: 'success',
+                                                    placement: 'center'
+                                                })
+
+                                                reloadScreen()
+                                            }).catch((err) => {
+                                                setSpinnerShow(false);
+                                                if (err.response.status == 422) {
+                                                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+                                                } else if (err.response.status == 498) {
+                                                    toast.show(err.response.data.msg, {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+
+                                                    navigation.navigate('LoginScreen')
+                                                } else if (err.response.status == 406) {
+                                                    toast.show(err.response.data.msg, {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+
+                                                    navigation.navigate('LoginScreen')
+                                                } else {
+                                                    toast.show('Unhandled error, please contact administrator for report', {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+                                                }
                                             })
                                         }
                                     })
-                                }
-                            })
+                            }
+                        });
                     }
-                });
+                })
+            } else {
+                setSpinnerShow(false);
+
+                if (statusName == 'never_ask_again') {
+                    setDialogOpenSetting(true)
+                } else {
+                    toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                }
             }
         })
     }
@@ -288,88 +303,103 @@ function AttendanceScreen() {
         const token = await AsyncStorage.getItem('api_token')
         setSpinnerShow(true);
 
-        checkMultiple([PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION, PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION]).then(async (res) => {
-            if (res[PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION] == 'denied' && res[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] == 'denied') {
-                setSpinnerShow(false);
-                toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
-                    type: 'danger',
-                    placement: 'center'
-                })
-            } else {
-                NetInfo.fetch().then(state => {
-                    if (!state.isConnected) {
+        requestLocationPermission((statusPermissions, statusName) => {
+            if (statusPermissions) {
+                checkMultiple([PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION, PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION]).then(async (res) => {
+                    if (res[PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION] == 'denied' && res[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] == 'denied') {
                         setSpinnerShow(false);
-                        toast.show('Periksa koneksi internet anda untuk melakukan absensi pulang', {
+                        toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
                             type: 'danger',
                             placement: 'center'
                         })
                     } else {
-                        Geolocation.getCurrentPosition(
-                            (position) => {
+                        NetInfo.fetch().then(state => {
+                            if (!state.isConnected) {
+                                setSpinnerShow(false);
+                                toast.show('Periksa koneksi internet anda untuk melakukan absensi pulang', {
+                                    type: 'danger',
+                                    placement: 'center'
+                                })
+                            } else {
+                                Geolocation.getCurrentPosition(
+                                    (position) => {
 
-                                const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
-                                const branchLocation = { latitude: latitude, longitude: longitude }
+                                        const userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }
+                                        const branchLocation = { latitude: latitude, longitude: longitude }
 
-                                if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
-                                    setSpinnerShow(false);
+                                        if (haversine(userLocation, branchLocation) > settings.presence_meter_radius) {
+                                            setSpinnerShow(false);
 
-                                    toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
-                                        type: 'danger',
-                                        placement: 'center'
-                                    })
-                                } else {
-                                    axios.post(`${API_URL}/presence/exit`, {
-                                        address: 'address',
-                                        latitude: position.coords.latitude,
-                                        longitude: position.coords.longitude,
-                                    }, {
-                                        headers: {
-                                            Authorization: 'Bearer ' + token
-                                        }
-                                    }).then(async (res) => {
-                                        setSpinnerShow(false);
-                                        toast.show(res.data.msg, {
-                                            type: 'success',
-                                            placement: 'center'
-                                        })
-
-                                        reloadScreen()
-                                    }).catch((err) => {
-                                        setSpinnerShow(false);
-                                        if (err.response.status == 422) {
-                                            toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                            toast.show('Maaf, kamu tidak bisa absen. Kamu berada diluar radius jarak kantor', {
                                                 type: 'danger',
                                                 placement: 'center'
                                             })
-                                        } else if (err.response.status == 498) {
-                                            toast.show(err.response.data.msg, {
-                                                type: 'danger',
-                                                placement: 'center'
-                                            })
-
-                                            navigation.navigate('LoginScreen')
-                                        } else if (err.response.status == 406) {
-                                            toast.show(err.response.data.msg, {
-                                                type: 'danger',
-                                                placement: 'center'
-                                            })
-
-                                            navigation.navigate('LoginScreen')
                                         } else {
-                                            toast.show('Unhandled error, please contact administrator for report', {
-                                                type: 'danger',
-                                                placement: 'center'
+                                            axios.post(`${API_URL}/presence/exit`, {
+                                                address: 'address',
+                                                latitude: position.coords.latitude,
+                                                longitude: position.coords.longitude,
+                                            }, {
+                                                headers: {
+                                                    Authorization: 'Bearer ' + token
+                                                }
+                                            }).then(async (res) => {
+                                                setSpinnerShow(false);
+                                                toast.show(res.data.msg, {
+                                                    type: 'success',
+                                                    placement: 'center'
+                                                })
+
+                                                reloadScreen()
+                                            }).catch((err) => {
+                                                setSpinnerShow(false);
+                                                if (err.response.status == 422) {
+                                                    toast.show(err.response.data.msg + (err.response.data.error ? `, ${err.response.data.error}` : ''), {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+                                                } else if (err.response.status == 498) {
+                                                    toast.show(err.response.data.msg, {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+
+                                                    navigation.navigate('LoginScreen')
+                                                } else if (err.response.status == 406) {
+                                                    toast.show(err.response.data.msg, {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+
+                                                    navigation.navigate('LoginScreen')
+                                                } else {
+                                                    toast.show('Unhandled error, please contact administrator for report', {
+                                                        type: 'danger',
+                                                        placement: 'center'
+                                                    })
+                                                }
                                             })
                                         }
-                                    })
-                                }
-                            },
-                            (error) => {
-                            },
-                            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-                        );
+                                    },
+                                    (error) => {
+                                    },
+                                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                                );
+                            }
+                        })
                     }
                 })
+            } else {
+                setSpinnerShow(false);
+
+                if (statusName == 'never_ask_again') {
+                    setDialogOpenSetting(true)
+                } else {
+                    toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
+                        type: 'danger',
+                        placement: 'center'
+                    })
+                }
             }
         })
     }
@@ -587,6 +617,25 @@ function AttendanceScreen() {
             <View
                 style={{ flex: 1 }}
             >
+                <ConfirmDialog
+                    title="Akses Lokasi Diperlukan"
+                    message="Izinkan aplikasi untuk mengakses lokasi?"
+                    visible={dialogOpenSetting}
+                    onTouchOutside={() => setDialogOpenSetting(false)}
+                    positiveButton={{
+                        title: "YES",
+                        onPress: () => {
+                            setDialogOpenSetting(false)
+                            Linking.openSettings()
+                        }
+                    }}
+                    negativeButton={{
+                        title: "NO",
+                        onPress: () => {
+                            setDialogOpenSetting(false)
+                        }
+                    }}
+                />
                 {
                     spinnerShow ? <LoadingSpinnerComponent /> : <></>
                 }
