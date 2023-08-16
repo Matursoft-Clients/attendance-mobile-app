@@ -28,7 +28,7 @@ function EditProfileScreen({ navigation, route }) {
 
     useEffect(() => {
         if (isFocused) {
-            BackHandler.addEventListener('hardwareBackPress', function () {
+            const func = () => {
                 navigation.navigate('AppMenu', {
                     screen: 'ProfileScreenWrapper', params: {
                         screen: 'ProfileScreen',
@@ -37,7 +37,15 @@ function EditProfileScreen({ navigation, route }) {
                         }
                     }
                 })
-            })
+
+                return () => { }
+            }
+
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', func)
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
         }
     }, [isFocused])
 

@@ -78,8 +78,8 @@ android {
         applicationId "com.bmt.absensi"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 102
-        versionName "1.0.2"
+        versionCode 160
+        versionName "1.6.0"
     }
     signingConfigs {
         release {

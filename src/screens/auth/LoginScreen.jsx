@@ -32,6 +32,18 @@ function LoginScreen({ navigation, route }) {
     }, [])
 
     useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
+    }, [isFocused])
+
+    useEffect(() => {
         if (route.params && isFocused) {
             if (route.params.is_logout) {
                 loadSettings()
@@ -40,9 +52,14 @@ function LoginScreen({ navigation, route }) {
         }
 
         if (isFocused) {
-            BackHandler.addEventListener('hardwareBackPress', function () {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
                 BackHandler.exitApp()
+                return () => { }
             });
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
         }
     }, [isFocused])
 

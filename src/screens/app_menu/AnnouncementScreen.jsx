@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { API_URL } from "@env"
 import { useToast } from "react-native-toast-notifications"
-import { RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
+import { BackHandler, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent"
 import FastImage from "react-native-fast-image"
 import { AnnouncementContext } from "../../context/AnnouncementContext"
@@ -30,6 +30,18 @@ function AnnouncementScreen({ navigation }) {
     useEffect(() => {
         loadAnnouncements()
         loadAmountNotReadNotif()
+    }, [isFocused])
+
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
     }, [isFocused])
 
     const loadAmountNotReadNotif = async () => {

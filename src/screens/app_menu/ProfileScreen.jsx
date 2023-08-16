@@ -3,7 +3,7 @@ import ContainerComponent from "../../components/ContainerComponent"
 import GlobalStyle from "../../utils/GlobalStyle"
 import AppUtil from "../../utils/AppUtil"
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Dimensions, Image, ImageBackground, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
+import { BackHandler, Dimensions, Image, ImageBackground, RefreshControl, SafeAreaView, ScrollView, View } from "react-native"
 import React, { useEffect, useState } from "react"
 import axios from "axios"
 import { API_URL } from "@env"
@@ -22,6 +22,18 @@ function ProfileScreen({ navigation, route }) {
             if (route.params.reload) {
                 loadUserData()
             }
+        }
+    }, [isFocused])
+
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
         }
     }, [isFocused])
 

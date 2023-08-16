@@ -14,6 +14,7 @@ import { useToast } from "react-native-toast-notifications";
 import DateUtil from "../../utils/DateUtil";
 import FuncUtil from "../../utils/FuncUtil";
 import { AnnouncementContext } from "../../context/AnnouncementContext";
+import { useIsFocused } from "@react-navigation/native";
 
 function HomeScreen({ navigation }) {
 
@@ -29,6 +30,7 @@ function HomeScreen({ navigation }) {
     const [dataModalAbsen, setDataModalAbsen] = useState({})
     const [dailyAttendance, setDailyAttendance] = useState({})
     const [city, setCity] = useState({})
+    const isFocused = useIsFocused()
 
     const { setAmountNotifAnnouncements } = useContext(AnnouncementContext)
 
@@ -42,8 +44,19 @@ function HomeScreen({ navigation }) {
         loadDailyAttendance()
         loadAmountNotReadNotif()
 
-        BackHandler.addEventListener('hardwareBackPress', function () { return true })
     }, [])
+
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
+    }, [isFocused])
 
     useEffect(() => {
         loadApiSholat()

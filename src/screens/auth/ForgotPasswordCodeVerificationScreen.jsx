@@ -1,5 +1,5 @@
 import { Button, Input, Text } from "@ui-kitten/components";
-import { View } from "react-native";
+import { BackHandler, View } from "react-native";
 import ContainerComponent from "../../components/ContainerComponent";
 import GlobalStyle from "../../utils/GlobalStyle";
 import AppUtil from "../../utils/AppUtil";
@@ -8,16 +8,32 @@ import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 import { useToast } from "react-native-toast-notifications";
 import axios from "axios";
 import { API_URL } from "@env"
+import { useIsFocused } from "@react-navigation/native";
 
 function ForgotPasswordCodeVerificationScreen({ navigation, route }) {
 
     const [email, setEmail] = useState(null)
     const toast = useToast()
     const [spinnerShow, setSpinnerShow] = useState(false)
+    const isFocused = useIsFocused()
 
     useEffect(() => {
         setEmail(route.params.email)
     }, [])
+
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                navigation.navigate('ForgotPasswordScreen')
+
+                return () => { };
+            })
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
+    }, [isFocused])
 
     const [code1, setCode1] = useState(null)
     const [code2, setCode2] = useState(null)

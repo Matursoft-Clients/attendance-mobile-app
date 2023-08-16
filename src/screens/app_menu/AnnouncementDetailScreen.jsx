@@ -13,6 +13,7 @@ import FastImage from "react-native-fast-image"
 import AutoHeightWebView from "react-native-autoheight-webview-fix"
 import { useIsFocused } from "@react-navigation/native"
 import { AnnouncementContext } from "../../context/AnnouncementContext"
+import { useBackHandler } from '@react-native-community/hooks'
 
 function AnnouncementDetailScreen({ navigation, route }) {
     const [announcement, setAnnouncement] = useState('')
@@ -35,7 +36,7 @@ function AnnouncementDetailScreen({ navigation, route }) {
 
     useEffect(() => {
         if (isFocused) {
-            BackHandler.addEventListener('hardwareBackPress', function () {
+            const func = () => {
                 navigation.navigate('AppMenu', {
                     screen: 'AnnouncementScreenWrapper', params: {
                         screen: 'AnnouncementScreen',
@@ -44,7 +45,14 @@ function AnnouncementDetailScreen({ navigation, route }) {
                         }
                     }
                 })
-            })
+
+                return () => { }
+            }
+
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', func)
+            return () => backHandler.remove()
+        } else {
+            return () => { }
         }
     }, [isFocused])
 

@@ -8,7 +8,7 @@ import { useToast } from "react-native-toast-notifications";
 import { API_URL } from "@env"
 import LoadingSpinnerComponent from "../../components/LoadingSpinnerComponent";
 import axios from "axios";
-import { useFocusEffect } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 
 function ResetPasswordScreen({ navigation, route }) {
     const [newPassword, setNewPassword] = useState('');
@@ -16,21 +16,21 @@ function ResetPasswordScreen({ navigation, route }) {
     const [email, setEmail] = useState('')
     const [token, setToken] = useState('')
     const [spinnerShow, setSpinnerShow] = useState(false)
+    const isFocused = useIsFocused()
 
     const toast = useToast()
 
-    useFocusEffect(
-        React.useCallback(() => {
-            const onBackPress = () => {
-                return true;
-            };
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
 
-            BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-            return () =>
-                BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-        }, []),
-    );
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
+    }, [isFocused])
 
     useEffect(() => {
         setEmail(route.params.email)
