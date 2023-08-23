@@ -1,4 +1,4 @@
-package com.bmt.absensi;
+package com.bmt.attendance;
 import android.os.Bundle;
 import com.facebook.react.ReactActivity;
 import org.devio.rn.splashscreen.SplashScreen;
@@ -14,7 +14,7 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "Absensi BMT";
+    return "BMT Absensi";
   }
 
   protected void onCreate(Bundle savedInstanceState) {

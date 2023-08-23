@@ -1,4 +1,4 @@
-package com.bmt.absensi;
+package com.bmt.attendance;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

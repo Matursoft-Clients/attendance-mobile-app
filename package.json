@@ -1,6 +1,6 @@
 {
-  "name": "absensibmtamanahindonesia",
-  "version": "1.6.0",
+  "name": "bmtabsensi",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",

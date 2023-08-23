@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "AbsensiBMTAmanahIndonesia.app"
-               BlueprintName = "AbsensiBMTAmanahIndonesia"
-               ReferencedContainer = "container:AbsensiBMTAmanahIndonesia.xcodeproj">
+               BuildableName = "BMTAbsensi.app"
+               BlueprintName = "BMTAbsensi"
+               ReferencedContainer = "container:BMTAbsensi.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "AbsensiBMTAmanahIndonesiaTests.xctest"
-               BlueprintName = "AbsensiBMTAmanahIndonesiaTests"
-               ReferencedContainer = "container:AbsensiBMTAmanahIndonesia.xcodeproj">
+               BuildableName = "BMTAbsensiTests.xctest"
+               BlueprintName = "BMTAbsensiTests"
+               ReferencedContainer = "container:BMTAbsensi.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AbsensiBMTAmanahIndonesia.app"
-            BlueprintName = "AbsensiBMTAmanahIndonesia"
-            ReferencedContainer = "container:AbsensiBMTAmanahIndonesia.xcodeproj">
+            BuildableName = "BMTAbsensi.app"
+            BlueprintName = "BMTAbsensi"
+            ReferencedContainer = "container:BMTAbsensi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AbsensiBMTAmanahIndonesia.app"
-            BlueprintName = "AbsensiBMTAmanahIndonesia"
-            ReferencedContainer = "container:AbsensiBMTAmanahIndonesia.xcodeproj">
+            BuildableName = "BMTAbsensi.app"
+            BlueprintName = "BMTAbsensi"
+            ReferencedContainer = "container:BMTAbsensi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
